@@ -1,7 +1,91 @@
+@font-face {
+    font-family: "PixelCode";
+    src: url("assets/fonts/PixelCode-Medium.woff2") format("woff2");
+}
+
+.root {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #080808;
+    font-family: "PixelCode";
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+}
+
 .container {
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-  justify-content: center;
-  align-items: center;
+    position: relative;
+    -webkit-box-shadow: inset 0px 0px 85px rgba(32, 21, 10, 1);
+    -moz-box-shadow: inset 0px 0px 85px rgba(32, 21, 10, 1);
+    box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
+    /* padding: 4rem; */
+    height: 100vh;
+    width: 100vw;
+    background-color: #1c0902;
+    border-radius: 2rem;
+    z-index: 0;
+}
+
+.terminal-overlay {
+    position: absolute;
+    background: repeating-linear-gradient(180deg, rgba(32, 21, 10, 0.3) 1px, transparent 20px);
+    border-radius: 6rem;
+    inset: 0;
+    z-index: 3;
+    animation: scan 22s linear infinite;
+}
+
+@keyframes scan {
+    0% {
+        transform: translateY(-200px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.terminal-container {
+    position: relative;
+    z-index: 2;
+}
+
+.terminal {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    height: inherit;
+}
+
+
+.xterm-rows span {
+    color: #e5a700;
+    text-shadow:
+        0 0 2px #fff71c,
+        0 0 30px #FF0000;
+    user-select: text;
+    font-weight: 700;
+}
+
+.xterm-cursor {
+    background-color: #e5a700 !important;
+    box-shadow:
+        0 0 2px #fff71c,
+        0 0 30px #FF0000;
+}
+
+.xterm-cursor-outline {
+    outline: 1px solid #e5a700 !important;
+    box-shadow:
+        0 0 2px #fff71c,
+        0 0 30px #FF0000;
+}
+
+.blue {
+    color: #77b2db;
+    text-shadow:
+        0 0 2px #11f7ff,
+        0 0 30px #0000FF;
 }

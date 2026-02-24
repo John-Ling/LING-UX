@@ -9,7 +9,7 @@ function App() {
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
-  const handle_key_down = (arg1: {key: string, domEvent: KeyboardEvent}) => {
+  const handle_key_down = (arg1: { key: string, domEvent: KeyboardEvent }) => {
     if (!xtermRef.current) {
       return;
     }
@@ -21,7 +21,6 @@ function App() {
       terminal.write("\n\r");
       init();
     } else if (event.ctrlKey && event.key.toLowerCase() === 'c') {
-      console.log('Ctrl+C detected!');
       event.preventDefault();
       terminal.write("\x03");
     } else {
@@ -41,12 +40,20 @@ function App() {
   useEffect(() => {
     const terminal = new Terminal({
       cursorBlink: true,
+      fontFamily: "PixelCode",
+      theme: {
+        background: "#1c0902",
+      }
     });
 
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
 
-    terminal.open(terminalRef.current!);
+    if (!terminalRef.current) {
+      return;
+    }
+
+    terminal.open(terminalRef.current);
     fitAddon.fit();
 
     xtermRef.current = terminal;
@@ -68,13 +75,18 @@ function App() {
   }, []);
 
   return (
-    <div className="container">
-      <div
-        ref={terminalRef}
-        style={{ width: '50vw', height: '80vh', textAlign: 'left' }}
-      />
+    <div className="root">
+      <div className="container">
+        {/* <div className="terminal-overlay"/> */}
+        <div className="terminal-container">
+          <div
+          className="terminal"
+          ref={terminalRef}
+          style={{ textAlign: 'left' }}
+        />
+        </div>
+      </div>
     </div>
-
   );
 }
 
