@@ -82,7 +82,6 @@ function App() {
           <div
           className="terminal"
           ref={terminalRef}
-          style={{ textAlign: 'left' }}
         />
         </div>
       </div>
