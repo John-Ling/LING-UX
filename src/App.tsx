@@ -1,31 +1,81 @@
+import { Terminal } from '@xterm/xterm';
 import './App.css'
-import { useCallback, useEffect } from 'react'
-import { useXTerm } from 'react-xtermjs'
+import { useCallback, useEffect, useRef } from 'react'
+import { FitAddon } from '@xterm/addon-fit';
+import '@xterm/xterm/css/xterm.css';
 
 function App() {
-  const { instance, ref } = useXTerm();
+  const terminalRef = useRef<HTMLDivElement | null>(null);
+  const xtermRef = useRef<Terminal | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
 
-  useEffect(() => {
-    instance?.writeln('Hello from react-xtermjs!')
-    instance?.onData((data) => instance?.write(data))
-    instance?.onKey(handle_key_down)
-  }, [instance]);
+  const handle_key_down = (arg1: {key: string, domEvent: KeyboardEvent}) => {
+    if (!xtermRef.current) {
+      return;
+    }
 
-  const handle_key_down = (arg1: {_: string, domEvent: KeyboardEvent}) => {
+    const terminal = xtermRef.current;
     const event = arg1.domEvent;
 
     if (event.key === "Enter") {
-      instance?.clear();
+      terminal.write("\n\r");
+      init();
     } else if (event.ctrlKey && event.key.toLowerCase() === 'c') {
       console.log('Ctrl+C detected!');
       event.preventDefault();
-      instance?.write("Hello\n");
+      terminal.write("\x03");
+    } else {
+      terminal.write(event.key)
     }
-
-
   }
 
-  return <div ref={ref} style={{ width: '100%', height: '100%' }} />
+  const init = () => {
+    if (!xtermRef.current) {
+      return;
+    }
+
+    const terminal = xtermRef.current;
+    terminal.write("jimbob@workstation ~ $ ");
+  }
+
+  useEffect(() => {
+    const terminal = new Terminal({
+      cursorBlink: true,
+    });
+
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
+
+    terminal.open(terminalRef.current!);
+    fitAddon.fit();
+
+    xtermRef.current = terminal;
+    fitAddonRef.current = fitAddon;
+
+    init();
+
+    terminal.onKey(handle_key_down)
+
+    const handleResize = () => fitAddonRef.current?.fit();
+
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      terminal.dispose();
+    };
+  }, []);
+
+  return (
+    <div className="container">
+      <div
+        ref={terminalRef}
+        style={{ width: '50vw', height: '80vh', textAlign: 'left' }}
+      />
+    </div>
+
+  );
 }
 
 export default App
