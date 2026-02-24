@@ -36,7 +36,40 @@ function App() {
     const terminal = xtermRef.current;
     terminal.write("jimbob@workstation ~ $ ");
   }
+  
+  const handle_socket_open = () => {
+    console.log("[LOG] Connected to websocket")
+  } 
 
+  const handle_socket_receive = (ev: MessageEvent) => {
+    console.log("[LOG] Received data");
+    console.log(ev.data);
+    const terminal = xtermRef.current;
+    if (terminal) {
+      terminal.write(ev.data + '\n')
+    }
+  }
+
+  // Create websocket connection
+  useEffect(() => {
+    console.log("[DEBUG] connecting to websocket");
+    const socket = new WebSocket("ws://localhost:8000/session/12345");
+    if (!socket) {
+      return;
+    }
+
+    socket.onmessage = ev => {
+      handle_socket_receive(ev)
+    }
+    socket.onopen = ev => {
+      handle_socket_open();
+    }
+
+    return () => {
+    }
+  }, []);
+
+  // Init xterm.js
   useEffect(() => {
     const terminal = new Terminal({
       cursorBlink: true,
