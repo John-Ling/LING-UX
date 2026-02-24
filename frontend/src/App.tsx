@@ -8,6 +8,7 @@ function App() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
   const handle_key_down = (arg1: { key: string, domEvent: KeyboardEvent }) => {
     if (!xtermRef.current) {
@@ -46,7 +47,7 @@ function App() {
     console.log(ev.data);
     const terminal = xtermRef.current;
     if (terminal) {
-      terminal.write(ev.data + '\n')
+      terminal.write(ev.data)
     }
   }
 
@@ -58,14 +59,19 @@ function App() {
       return;
     }
 
+    socketRef.current = socket;
+
     socket.onmessage = ev => {
       handle_socket_receive(ev)
     }
+
     socket.onopen = ev => {
       handle_socket_open();
     }
 
+
     return () => {
+      socket.close();
     }
   }, []);
 
@@ -105,6 +111,22 @@ function App() {
       window.removeEventListener('resize', handleResize);
       terminal.dispose();
     };
+  }, []);
+
+  const handle_tab_close = () => {
+    const socket = socketRef.current;
+    if (!socket) {
+      return;
+    }
+    console.log ("[LOG] Closing Socket")
+    socket.close();
+  }
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handle_tab_close);
+    return () => {
+      window.removeEventListener("beforeunload", handle_tab_close);
+    }
   }, []);
 
   return (

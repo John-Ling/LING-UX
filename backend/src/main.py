@@ -1,5 +1,6 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
+import websockets
 from collections import defaultdict
 import logging
 import asyncio
@@ -17,23 +18,23 @@ app = FastAPI()
 
 @app.websocket("/session/{session_id}")
 async def connect_session(session_id: str, socket: WebSocket):
+    session_active = True
     try:
         await socket.accept()
         active_sessions[session_id].add(socket)
-        while True:
+        while session_active:
             logging.info("Sending bytes")
-            await socket.send_text("Hello World")
+            await socket.send_text("Hello World\r\n")
             await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        logging.info("Stopping")
-        raise KeyboardInterrupt
-    except Exception as e:
-        logging.error(f"[ERROR] connect_session socket failed: {e}")
+    except WebSocketDisconnect:
+        session_active = False
+        logging.info("[INFO] client disconnected")
     finally:
         logging.info("[INFO] Closing session")
         active_sessions[session_id].discard(socket)
-        await socket.close()
-        
+        if active_sessions[session_id] == set():
+            del active_sessions[session_id]
+
 @app.get("/sessions")
 async def get_sessions():
     return {"sessions": list(active_sessions.keys())}
