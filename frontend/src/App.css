@@ -59,12 +59,11 @@
     height: inherit;
 }
 
-
 .xterm-rows span {
     color: #e5a700;
     text-shadow:
         0 0 2px #fff71c,
-        0 0 30px #FF0000;
+        0 0 20px #FF0000;
     user-select: text;
     font-weight: 700;
 }
@@ -73,14 +72,14 @@
     background-color: #e5a700 !important;
     box-shadow:
         0 0 2px #fff71c,
-        0 0 30px #FF0000;
+        0 0 20px #FF0000;
 }
 
 .xterm-cursor-outline {
     outline: 1px solid #e5a700 !important;
     box-shadow:
         0 0 2px #fff71c,
-        0 0 30px #FF0000;
+        0 0 20px #FF0000;
 }
 
 .blue {
