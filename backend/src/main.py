@@ -1,6 +1,4 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
-import websockets
 from collections import defaultdict
 import logging
 import asyncio
@@ -12,9 +10,10 @@ logging.basicConfig(
     "%(module)s:%(funcName)s:%(lineno)d - %(message)s",
 )
 
+# Todo, add a class for session to track attributes such as time, ttl
+# and potentially a secret key to prevent users from visiting other's sessions
 active_sessions: defaultdict[str, set[WebSocket]] = defaultdict(set)
 app = FastAPI()
-
 
 @app.websocket("/session/{session_id}")
 async def connect_session(session_id: str, socket: WebSocket):

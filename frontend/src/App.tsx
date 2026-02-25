@@ -1,6 +1,7 @@
 import { Terminal } from '@xterm/xterm';
 import './App.css'
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import { useSocketConnection } from './hooks/useSocketConnection';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
@@ -8,9 +9,31 @@ function App() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
 
-  const handle_key_down = (arg1: { key: string, domEvent: KeyboardEvent }) => {
+  const socketReceive = (ev: MessageEvent) => {
+    console.log("Received data")
+    const terminal = xtermRef.current;
+    if (!terminal) {
+      return;
+    }
+
+    console.log(ev.data)
+    terminal.write(ev.data);
+  }
+
+  const socketOpen = (self: WebSocket, ev: Event) => {
+    console.log("[LOG] Opening websocket connection");
+
+    // Check cookies for existing session and connect to that instead if it exists
+  }
+
+  const socketClose = (self: WebSocket, ev: CloseEvent) => {
+    console.log("[LOG] Closing websocket. Goodbye :)");
+  }
+
+  const { socketRef } = useSocketConnection(socketReceive, socketOpen, socketClose);
+
+  const handleKeyDown = (arg1: { key: string, domEvent: KeyboardEvent }) => {
     if (!xtermRef.current) {
       return;
     }
@@ -20,7 +43,7 @@ function App() {
 
     if (event.key === "Enter") {
       terminal.write("\n\r");
-      init();
+      initPrompt();
     } else if (event.ctrlKey && event.key.toLowerCase() === 'c') {
       event.preventDefault();
       terminal.write("\x03");
@@ -29,51 +52,14 @@ function App() {
     }
   }
 
-  const init = () => {
+  const initPrompt = () => {
     if (!xtermRef.current) {
       return;
     }
 
     const terminal = xtermRef.current;
-    terminal.write("jimbob@workstation ~ $ ");
+    terminal.write("john@workstation ~ $ ");
   }
-  
-  const handle_socket_open = () => {
-    console.log("[LOG] Connected to websocket")
-  } 
-
-  const handle_socket_receive = (ev: MessageEvent) => {
-    console.log("[LOG] Received data");
-    console.log(ev.data);
-    const terminal = xtermRef.current;
-    if (terminal) {
-      terminal.write(ev.data)
-    }
-  }
-
-  // Create websocket connection
-  useEffect(() => {
-    console.log("[DEBUG] connecting to websocket");
-    const socket = new WebSocket("ws://localhost:8000/session/12345");
-    if (!socket) {
-      return;
-    }
-
-    socketRef.current = socket;
-
-    socket.onmessage = ev => {
-      handle_socket_receive(ev)
-    }
-
-    socket.onopen = ev => {
-      handle_socket_open();
-    }
-
-
-    return () => {
-      socket.close();
-    }
-  }, []);
 
   // Init xterm.js
   useEffect(() => {
@@ -98,13 +84,10 @@ function App() {
     xtermRef.current = terminal;
     fitAddonRef.current = fitAddon;
 
-    init();
-
-    terminal.onKey(handle_key_down)
+    initPrompt();
+    terminal.onKey(handleKeyDown);
 
     const handleResize = () => fitAddonRef.current?.fit();
-
-
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -113,31 +96,16 @@ function App() {
     };
   }, []);
 
-  const handle_tab_close = () => {
-    const socket = socketRef.current;
-    if (!socket) {
-      return;
-    }
-    console.log ("[LOG] Closing Socket")
-    socket.close();
-  }
-
-  useEffect(() => {
-    window.addEventListener("beforeunload", handle_tab_close);
-    return () => {
-      window.removeEventListener("beforeunload", handle_tab_close);
-    }
-  }, []);
-
   return (
     <div className="root">
       <div className="container">
         {/* <div className="terminal-overlay"/> */}
+        <div className="vignette" />
         <div className="terminal-container">
           <div
-          className="terminal"
-          ref={terminalRef}
-        />
+            className="terminal"
+            ref={terminalRef}
+          />
         </div>
       </div>
     </div>
