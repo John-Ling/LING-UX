@@ -1,4 +1,8 @@
+from typing import cast
+from socket import SocketIO
+import socketio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from collections import defaultdict
 import logging
 import asyncio
@@ -10,34 +14,22 @@ logging.basicConfig(
     "%(module)s:%(funcName)s:%(lineno)d - %(message)s",
 )
 
-# Todo, add a class for session to track attributes such as time, ttl
-# and potentially a secret key to prevent users from visiting other's sessions
-active_sessions: defaultdict[str, set[WebSocket]] = defaultdict(set)
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],      
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.websocket("/session/{session_id}")
-async def connect_session(session_id: str, socket: WebSocket):
-    session_active = True
-    try:
-        await socket.accept()
-        active_sessions[session_id].add(socket)
-        while session_active:
-            logging.info("Sending bytes")
-            await socket.send_text("Hello World\r\n")
-            await asyncio.sleep(1)
-    except WebSocketDisconnect:
-        session_active = False
-        logging.info("[INFO] client disconnected")
-    finally:
-        logging.info("[INFO] Closing session")
-        active_sessions[session_id].discard(socket)
-        if active_sessions[session_id] == set():
-            del active_sessions[session_id]
+sio = socketio.AsyncServer(cors_allowed_origins=["http://localhost:5173"], async_mode="asgi")
+socket_app = socketio.ASGIApp(sio, app)
 
-@app.get("/sessions")
-async def get_sessions():
-    return {"sessions": list(active_sessions.keys())}
-
+@sio.event
+async def create_session(sid, data):
+    logging.info("Received websocket connection")
+    await sio.emit("response_event", f"Server received: {data}", room=sid)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(socket_app, host="0.0.0.0", port=8000, log_level="info")
