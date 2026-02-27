@@ -46,10 +46,6 @@ def send_command(fd: int, command: str) -> None:
 def main():
     # Fork a child process connected to a PTY
     pid, master_fd = pty.fork()
-    print(pid)
-
-
-    print(pid)
 
     if pid == 0:
         # ---- Child process: exec bash ----
@@ -59,7 +55,7 @@ def main():
         env["ZDOTDIR"] = "/nonexistent"   # stops zsh from loading .zshrc
         env.pop("ZSH", None)
         env.pop("ZSH_THEME", None)
-        os.execvpe("sh", ["sh"], env)
+        os.execvpe("/bin/bash", ["/bin/bash", "--noprofile", "--norc"], env)
         # execvp never returns on success; this line won't run
         raise RuntimeError("execvp failed")
 
