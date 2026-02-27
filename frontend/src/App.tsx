@@ -8,7 +8,7 @@ import type { DisconnectDescription, Socket } from 'socket.io-client';
 
 function App() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
-  const [terminalBuffer, setTerminalBuffer] = useState<string>("");
+  const terminalBufferRef = useRef<string>("");
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
@@ -19,6 +19,7 @@ function App() {
       return;
     }
 
+    console.log(data)
     console.log(data["output"])
     if (data["output"]) {
       terminal.write(data["output"]);
@@ -36,27 +37,11 @@ function App() {
 
   const { socketRef } = useSocketConnection(socketReceive, socketOpen, socketClose);
 
-  const handleKeyDown = (arg1: { key: string, domEvent: KeyboardEvent }) => {
-    const terminal = xtermRef.current;
-    const event = arg1.domEvent;
+  const handleData = (arg1: string) => {
+    console.log("DATA", arg1)
     const socket = socketRef.current;
-    if (!socket || !terminal) {
-      return;
-    }
-
-    if (event.key === "Enter") {
-      console.log("[LOG] Sending data to terminal")
-      console.log(terminalBuffer)
-      socket.emit("send-to-terminal", {"command": "echo 'hello world'" + '\n'});
-      setTerminalBuffer("");
-      terminal.write("\n\r");
-      initPrompt();
-    } else if (event.ctrlKey && event.key.toLowerCase() === 'c') {
-      event.preventDefault();
-      terminal.write("\x03");
-    } else {
-      terminal.write(event.key);
-      setTerminalBuffer(value => value + event.key);
+    if (socket) {
+      socket.emit("send-to-terminal", {"command": arg1})
     }
   }
 
@@ -73,7 +58,6 @@ function App() {
   // Init xterm.js
   useEffect(() => {
     const terminal = new Terminal({
-      cursorBlink: true,
       fontFamily: "PixelCode",
       theme: {
         background: "#1c0902",
@@ -94,7 +78,8 @@ function App() {
     fitAddonRef.current = fitAddon;
 
     initPrompt();
-    terminal.onKey(handleKeyDown);
+    // terminal.onKey(handleKeyDown);
+    terminal.onData(handleData);
 
     const handleResize = () => fitAddonRef.current?.fit();
     window.addEventListener('resize', handleResize);
@@ -139,11 +124,11 @@ const useSocketConnection = (
     }
 
     socketRef.current = socket;
-    
+
     socket.on("connect", () => onOpen(socket));
-    socket.on("disconnect",(reason, description) => onClose(reason, description));
+    socket.on("disconnect", (reason, description) => onClose(reason, description));
     socket.on("session_created", (data) => {
-      console.log("[LOG] session created successfully") 
+      console.log("[LOG] session created successfully")
       console.log(data)
       sessionIdRef.current = data.sid;
     });
