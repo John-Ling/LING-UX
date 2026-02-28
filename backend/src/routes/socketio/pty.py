@@ -7,7 +7,7 @@ import time
 
 from logger import logger
 from models.session import Session
-
+import re
 
 def register_handlers(
     sio: AsyncServer,
@@ -87,6 +87,13 @@ def register_handlers(
                 ),
                 None,
             )
+    
+        def decode_data(bytes):
+            # Remove ansi escape codes for removing colours
+            ansi_escape_pattern = re.compile(rb'\x1b\[[0-9;]*m')  # colours only
+            cleaned = ansi_escape_pattern.sub(b'', bytes)
+
+            return cleaned.decode("utf-8", errors="ignore")
 
         while True:
             _sessions = [get_session(sid) for sid in sessions.keys()]
@@ -112,7 +119,7 @@ def register_handlers(
 
                     output = await loop.run_in_executor(
                         executor=None,
-                        func=lambda: socket.recv(READ_SIZE).decode(),
+                        func=lambda: decode_data(socket.recv(READ_SIZE)),
                     )
                     if not output:
                         logger.info(f"Session {session.id} container exited")

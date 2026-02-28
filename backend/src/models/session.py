@@ -21,8 +21,9 @@ class Session:
         self.id = id
         self.last_updated = time.time()
         self.container: Container = docker_client.containers.run(
-            "alpine:latest",
-            command="/bin/sh",
+            "web-shell-user-container:latest",
+            command=["/bin/bash", "--rcfile", "/etc/bash.bashrc"],
+            working_dir="/home",
             name=f"session_{id}",
             detach=True,
             tty=True,
@@ -33,10 +34,8 @@ class Session:
             cap_drop=["ALL"],
             security_opt=["no-new-privileges:true"],
             remove=False,
-            # tmpfs={"/home": "size=64m,mode=1777"},
-            tmpfs={"/tmp": "size=64m,mode=1777"},  # move tmpfs to /tmp instead
+            tmpfs={"/tmp": "size=64m,mode=1777"},
             environment={
-                "TERM": "dumb",
                 "PS1": r"guest@workstation \w $ ",
             },
         )
