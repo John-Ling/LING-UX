@@ -29,7 +29,15 @@ function App() {
 
   const socketOpen = async (self: Socket) => {
     console.log("[LOG] Opening websocket connection");
-    self.emit("create_session", "HelLo Backend");
+    self.emit("create_session");
+
+    const terminal = xtermRef.current;
+    if (terminal) {
+      console.log("[LOG] Setting terminal size to match initial client size");
+      // Set pty size based on current client size
+      self.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
+    }
+
   }
 
   const socketClose = (reason: Socket.DisconnectReason, description?: DisconnectDescription) => {
@@ -41,9 +49,9 @@ function App() {
   const handleData = (data: string) => {
     console.log("DATA", data)
     const socket = socketRef.current;
-    const terminal = xtermRef.current;  
+    const terminal = xtermRef.current;
     if (socket && terminal) {
-      socket.emit("send-to-terminal", { "command": data})
+      socket.emit("send-to-terminal", { "command": data })
     }
   }
 

@@ -15,7 +15,7 @@ from models.session import Session
 
 def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]):
     @sio.on("create_session")
-    async def session(sid, data):
+    async def session(sid):
         logger.info("Received websocket connection")
         logger.info(f"Session id {sid}")
 
