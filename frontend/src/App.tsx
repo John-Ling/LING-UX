@@ -1,7 +1,7 @@
 import { Terminal } from '@xterm/xterm';
 import './App.css'
 import { io } from 'socket.io-client';
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import type { DisconnectDescription, Socket } from 'socket.io-client';
@@ -37,60 +37,70 @@ function App() {
 
   const { socketRef } = useSocketConnection(socketReceive, socketOpen, socketClose);
 
-  const handleData = useCallback((arg1: string) => {
+  const handleData = (arg1: string) => {
     console.log("DATA", arg1)
     const socket = socketRef.current;
     if (socket) {
-      socket.emit("send-to-terminal", {"command": arg1})
+      socket.emit("send-to-terminal", { "command": arg1 })
     }
-  }, [])
+  }
 
-  const initPrompt = useCallback(() => {
+  const handleResize = () => {
+    const socket = socketRef.current;
+    const terminal = xtermRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (fitAddon && socket && terminal) {
+      fitAddon.fit();
+      // Resize pty on backend
+      socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols })
+    }
+
+  }
+
+  const initPrompt = () => {
     if (!xtermRef.current) {
       return;
     }
 
     const terminal = xtermRef.current;
     terminal.write("guest@workstation ~ ");
-  }, [])
-
-  useEffect(() => {
-  const init = async () => {
-    await document.fonts.load('1em PixelCode');
-
-    const terminal = new Terminal({
-      fontFamily: "PixelCode",
-      theme: { background: "#1c0902" }
-    });
-
-    const fitAddon = new FitAddon();
-    terminal.loadAddon(fitAddon);
-
-    if (!terminalRef.current) return;
-
-    terminal.open(terminalRef.current);
-    fitAddon.fit();
-
-    xtermRef.current = terminal;
-    fitAddonRef.current = fitAddon;
-
-    initPrompt();
-    terminal.onData(handleData);
-
-    const handleResize = () => fitAddonRef.current?.fit();
-    handleResizeRef.current = handleResize;
-    window.addEventListener('resize', handleResize);
   }
 
-  init();
+  useEffect(() => {
+    // const initTerminal = async () => {
+      // await document.fonts.load('1em PixelCode');
 
-  return () => {
-    if (handleResizeRef.current) {
-      window.removeEventListener('resize', handleResizeRef.current);
-    }
-    xtermRef.current?.dispose();
-  };
-}, []);
+      const terminal = new Terminal({
+        fontFamily: "PixelCode",
+        theme: { background: "#1c0902" }
+      });
+
+      const fitAddon = new FitAddon();
+      terminal.loadAddon(fitAddon);
+
+      if (!terminalRef.current) return;
+
+      terminal.open(terminalRef.current);
+      fitAddon.fit();
+
+      xtermRef.current = terminal;
+      fitAddonRef.current = fitAddon;
+
+      initPrompt();
+      terminal.onData(handleData);
+
+      handleResizeRef.current = handleResize;
+      window.addEventListener('resize', handleResize);
+    // }
+
+    // initTerminal();
+    return () => {
+      if (handleResizeRef.current) {
+        window.removeEventListener('resize', handleResizeRef.current);
+      }
+      xtermRef.current?.dispose();
+    };
+  }, []);
 
   return (
     <div className="root">
