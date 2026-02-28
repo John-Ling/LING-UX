@@ -1,16 +1,16 @@
 import { Terminal } from '@xterm/xterm';
 import './App.css'
 import { io } from 'socket.io-client';
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import type { DisconnectDescription, Socket } from 'socket.io-client';
 
 function App() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
-  const terminalBufferRef = useRef<string>("");
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const handleResizeRef = useRef<(() => void) | null>(null);
 
   const socketReceive = (data: any) => {
     console.log("Received data")
@@ -37,39 +37,36 @@ function App() {
 
   const { socketRef } = useSocketConnection(socketReceive, socketOpen, socketClose);
 
-  const handleData = (arg1: string) => {
+  const handleData = useCallback((arg1: string) => {
     console.log("DATA", arg1)
     const socket = socketRef.current;
     if (socket) {
       socket.emit("send-to-terminal", {"command": arg1})
     }
-  }
+  }, [])
 
-  const initPrompt = () => {
+  const initPrompt = useCallback(() => {
     if (!xtermRef.current) {
       return;
     }
 
     const terminal = xtermRef.current;
     terminal.write("guest@workstation ~ ");
+  }, [])
 
-  }
-
-  // Init xterm.js
   useEffect(() => {
+  const init = async () => {
+    await document.fonts.load('1em PixelCode');
+
     const terminal = new Terminal({
       fontFamily: "PixelCode",
-      theme: {
-        background: "#1c0902",
-      }
+      theme: { background: "#1c0902" }
     });
 
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
 
-    if (!terminalRef.current) {
-      return;
-    }
+    if (!terminalRef.current) return;
 
     terminal.open(terminalRef.current);
     fitAddon.fit();
@@ -78,17 +75,22 @@ function App() {
     fitAddonRef.current = fitAddon;
 
     initPrompt();
-    // terminal.onKey(handleKeyDown);
     terminal.onData(handleData);
 
     const handleResize = () => fitAddonRef.current?.fit();
+    handleResizeRef.current = handleResize;
     window.addEventListener('resize', handleResize);
+  }
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      terminal.dispose();
-    };
-  }, []);
+  init();
+
+  return () => {
+    if (handleResizeRef.current) {
+      window.removeEventListener('resize', handleResizeRef.current);
+    }
+    xtermRef.current?.dispose();
+  };
+}, []);
 
   return (
     <div className="root">
