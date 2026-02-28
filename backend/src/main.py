@@ -65,7 +65,7 @@ async def session(sid, data):
         env.pop("ZSH_THEME", None)
         os.execvpe("/bin/bash", ["/bin/bash", "--noprofile", "--norc"], env)
     else:
-        # Parent process
+        # There should be a single parent process that handles reading and writing to all clients
         logger.info("Starting read write loop")
         sio.start_background_task(read_and_send_to_client)
 
@@ -87,8 +87,9 @@ async def receive(sid: str, data: dict):
     write_to_pty(session.file_descriptor, data["command"])
 
 
-@sio.on("pty-resize")
+@sio.on("resize-terminal")
 async def resize(sid: str, data: dict):
+    logger.info("RESiZING")
     session = get_session(sid)
     if session is None:
         raise RuntimeError("No session exists")
