@@ -1,7 +1,7 @@
 import { Terminal } from '@xterm/xterm';
 import './App.css'
 import { io } from 'socket.io-client';
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import type { DisconnectDescription, Socket } from 'socket.io-client';
@@ -11,6 +11,7 @@ function App() {
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const handleResizeRef = useRef<(() => void) | null>(null);
+  const [fontLoaded, setFontLoaded] = useState<boolean>(false);
 
   const socketReceive = (data: any) => {
     console.log("Received data")
@@ -37,11 +38,12 @@ function App() {
 
   const { socketRef } = useSocketConnection(socketReceive, socketOpen, socketClose);
 
-  const handleData = (arg1: string) => {
-    console.log("DATA", arg1)
+  const handleData = (data: string) => {
+    console.log("DATA", data)
     const socket = socketRef.current;
-    if (socket) {
-      socket.emit("send-to-terminal", { "command": arg1 })
+    const terminal = xtermRef.current;  
+    if (socket && terminal) {
+      socket.emit("send-to-terminal", { "command": data})
     }
   }
 
@@ -67,40 +69,51 @@ function App() {
   }
 
   useEffect(() => {
-    // const initTerminal = async () => {
-      // await document.fonts.load('1em PixelCode');
+    const loadFont = async () => {
+      await document.fonts.load("1em PixelCode");
+      setFontLoaded(true);
+    }
+    loadFont();
+    return () => {
+      document.fonts.clear();
+      setFontLoaded(false);
+    }
+  }, [])
 
-      const terminal = new Terminal({
-        fontFamily: "PixelCode",
-        theme: { background: "#1c0902" }
-      });
+  useEffect(() => {
+    if (!fontLoaded) {
+      return;
+    }
 
-      const fitAddon = new FitAddon();
-      terminal.loadAddon(fitAddon);
+    const terminal = new Terminal({
+      fontFamily: "PixelCode",
+      theme: { background: "#1c0902" }
+    });
 
-      if (!terminalRef.current) return;
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
 
-      terminal.open(terminalRef.current);
-      fitAddon.fit();
+    if (!terminalRef.current) return;
 
-      xtermRef.current = terminal;
-      fitAddonRef.current = fitAddon;
+    terminal.open(terminalRef.current);
+    fitAddon.fit();
 
-      initPrompt();
-      terminal.onData(handleData);
+    xtermRef.current = terminal;
+    fitAddonRef.current = fitAddon;
 
-      handleResizeRef.current = handleResize;
-      window.addEventListener('resize', handleResize);
-    // }
+    initPrompt();
+    terminal.onData(handleData);
 
-    // initTerminal();
+    handleResizeRef.current = handleResize;
+    window.addEventListener('resize', handleResize);
+
     return () => {
       if (handleResizeRef.current) {
         window.removeEventListener('resize', handleResizeRef.current);
       }
       xtermRef.current?.dispose();
     };
-  }, []);
+  }, [fontLoaded]);
 
   return (
     <div className="root">
@@ -155,7 +168,6 @@ const useSocketConnection = (
   }, []);
 
   const handle_tab_close = () => {
-
     const socket = socketRef.current;
     if (!socket) {
       return;

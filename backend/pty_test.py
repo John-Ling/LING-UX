@@ -12,7 +12,6 @@ import select
 import termios
 import tty
 
-
 def read_until_prompt(fd: int, prompt: str = "$ ", timeout: float = 2.0) -> str:
     """Read from fd until we see a shell prompt or hit the timeout."""
     output = ""

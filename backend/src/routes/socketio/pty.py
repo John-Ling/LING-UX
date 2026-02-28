@@ -1,17 +1,16 @@
-import socketio
 from socketio import AsyncServer
 from collections import defaultdict
-from logger import logger
 import asyncio
 import pty
-import logging
 import fcntl
 import termios
 import struct
 import os
 import select
+import time
 
-from session import Session
+from logger import logger
+from models.session import Session
 
 
 def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]):
@@ -42,7 +41,6 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
 
         await sio.emit("session_created", sid, room=sid)
 
-
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
         """
@@ -54,8 +52,8 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
 
         logger.info(f"Received command {data["command"]}")
         logger.info(f"Writing to file descriptor {session.file_descriptor}")
+        session.last_updated = time.time()
         write_to_pty(session.file_descriptor, data["command"])
-
 
     @sio.on("resize-terminal")
     async def resize(sid: str, data: dict):
@@ -65,7 +63,6 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
         if session is None:
             raise RuntimeError("No session exists")
         resize_pty(session.file_descriptor, data["row_count"], data["column_count"])
-
 
     def get_session(sid: str):
         session_set = sessions.get(sid, None)
@@ -77,10 +74,8 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
         session = next(iter(session_set))
         return session
 
-
     def write_to_pty(file_descriptor: int, data: str):
         os.write(file_descriptor, data.encode())
-
 
     async def read_and_send_to_client():
         """
@@ -112,7 +107,9 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
                 try:
                     output = await loop.run_in_executor(
                         executor=None,
-                        func=lambda: os.read(descriptor, READ_SIZE).decode(errors="ignore"),
+                        func=lambda: os.read(descriptor, READ_SIZE).decode(
+                            errors="ignore"
+                        ),
                     )
                     target = file_descriptor_to_sessions[descriptor].id
                     logger.info(f"SENDING DATA {output} TO SESSION {target}")
@@ -123,27 +120,22 @@ def register_handlers(sio: AsyncServer, sessions: defaultdict[str, set[Session]]
 
             await asyncio.sleep(0.05)  # Yield to event loop
 
-
     def resize_pty(file_descriptor: int, row_count, column_count):
         winsize = struct.pack("HH", row_count, column_count)
         fcntl.ioctl(file_descriptor, termios.TIOCSWINSZ, winsize)
-
 
     async def send(sid, data):
         """
         Sends data back the client
         """
 
-
     @sio.event
     def connect(sid, environ):
         print("I'm connected!")
 
-
     @sio.event
     def connect_error(data):
         print("The connection failed!")
-
 
     @sio.event
     def disconnect(sid):
