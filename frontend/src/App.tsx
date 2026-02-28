@@ -67,15 +67,6 @@ function App() {
 
   }
 
-  const initPrompt = () => {
-    if (!xtermRef.current) {
-      return;
-    }
-
-    const terminal = xtermRef.current;
-    terminal.write("guest@workstation ~ ");
-  }
-
   useEffect(() => {
     const loadFont = async () => {
       await document.fonts.load("1em PixelCode");
@@ -109,7 +100,6 @@ function App() {
     xtermRef.current = terminal;
     fitAddonRef.current = fitAddon;
 
-    initPrompt();
     terminal.onData(handleData);
 
     handleResizeRef.current = handleResize;

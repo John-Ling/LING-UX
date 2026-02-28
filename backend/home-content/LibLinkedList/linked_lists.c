@@ -1,0 +1,384 @@
+#include "linked_lists.h"
+
+// library that allows for a linked list of any type to be created for learning purposes
+
+// create an empty linked list by passing NULL
+// or convert any array into a linked list by converting it into void pointers
+// using array_to_void_array() and passing it
+// byte size (aka datatype) of items being stored needs to be specified
+LinkedList* ll_create(void* values[], const size_t n, const size_t typeSize)
+{
+    if (values == NULL && n != 0)
+    {
+        return NULL;
+    }
+
+    LinkedList* list = (LinkedList*)malloc(sizeof(LinkedList));
+    if (list == NULL)
+    {
+        return NULL;
+    }
+
+    list->dataSize = typeSize;
+    list->itemCount = 0;
+    list->tail = NULL;
+    list->head = NULL;
+
+    for (size_t i = 0; i < n; i++)
+    {
+        ll_insert(list, values[i], -1);
+    }
+
+    if (values != NULL)
+    {
+        free_void_array(values, n);
+    }
+    
+    return list;
+}
+
+int ll_print(LinkedList* list, void print(const void*))
+{
+    ListNode* current = list->head;
+    while (current != NULL)
+    {
+        print(current->value);
+        current = current->next;
+    }
+    putchar('\n');
+    return EXIT_SUCCESS;
+}
+
+// Creates a list node and returns its address
+ListNode* _ll_create_node(const void* data, const size_t size)
+{
+    ListNode* node = (ListNode*)malloc(sizeof(ListNode));
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    node->value = (void*)malloc(size);
+    node->next = NULL;
+
+    if (node->value == NULL)
+    {
+        free(node);
+        return NULL;
+    }
+
+    memmove(node->value, data, size);
+    return node;
+}
+
+int _ll_insert_node(LinkedList* list, ListNode* node, const int index)
+{
+    node->next = NULL;
+    list->itemCount++;
+
+    // insert node into correct position
+    if (list->head == NULL || list->tail == NULL)
+    {
+        // list is empty
+        list->head = node;
+        list->tail = node;
+        return EXIT_SUCCESS;
+    }
+
+    // insert at head
+    if (index == 0)
+    {
+        node->next = list->head;
+        list->head = node;
+    }
+    else if (index == -1) // insert at tail
+    {
+        list->tail->next = node;
+        list->tail = node;  
+    }
+    else
+    {
+        ListNode* current = list->head;
+        // travel to node that comes before index
+        for (int i = 0; i < index - 1; i++)
+        {
+            if (current->next == NULL)
+            {
+                break;
+            }
+            current = current->next;
+        }
+
+        node->next = current->next;
+        current->next = node;
+        if (node->next == NULL) 
+        {
+            list->tail = node;
+        }
+    }
+    
+    return EXIT_SUCCESS;
+}
+
+// inserts a value at index in a linked list
+// inserting at index -1 inserts at the end of the list
+int ll_insert(LinkedList* list, const void* value, const int index)
+{
+    if (index > list->itemCount || index < -1 || list == NULL)
+    {
+        return EXIT_FAILURE;
+    }
+
+    ListNode* node = _ll_create_node(value, list->dataSize);
+    return _ll_insert_node(list, node, index);
+}
+
+int ll_insert_int(LinkedList* list, int value, const int index)
+{
+    return ll_insert(list, &value, index);
+}
+
+int ll_insert_str(LinkedList* list, char* value, const int index)
+{
+    // since string can have variable length
+    // we need to create a node of appropriate size
+    // then insert
+    ListNode* node = _ll_create_node(value, strlen(value) + 1);
+
+    // use internal insert_node function to directly insert node
+    return _ll_insert_node(list, node, index);
+}
+
+int ll_insert_flt(LinkedList* list, float value, const int index)
+{
+    return ll_insert(list, &value, index);
+}
+
+int ll_insert_dbl(LinkedList* list, double value, const int index)
+{
+    return ll_insert(list, &value, index);
+}
+
+int ll_insert_chr(LinkedList* list, char value, const int index)
+{
+    return ll_insert(list, &value, index);
+}
+
+int ll_delete(LinkedList* list, const int index, void free_item(void*))
+{
+    if (list->itemCount == 0 || index >= list->itemCount || index < -1)
+    {
+        return EXIT_FAILURE;
+    }
+
+    if (free_item == NULL)
+    {
+        free_item = free;
+    }
+
+    if (list->itemCount == 1)
+    {
+        free_item(list->tail->value);
+        list->tail->value = NULL;
+        free(list->tail);
+        list->tail = NULL;
+        list->head = NULL;
+        list->itemCount = 0;
+        return EXIT_SUCCESS;
+    }
+
+    if (index == 0 || list->itemCount == 1)
+    {
+        ListNode* temp = list->head;
+        list->head = temp->next;
+        if (list->head == NULL) 
+        {
+            list->tail = NULL;
+        }
+        
+        free_item(temp->value);
+        temp->value = NULL;
+        free(temp);
+        temp = NULL;
+    }
+    else if (index == -1)
+    {   
+        ListNode* current = list->head;
+        // get node before tail
+        while (current->next != list->tail) 
+        {
+            current = current->next;
+        }
+        free_item(list->tail->value);
+        free(list->tail);
+        list->tail = current;
+        list->tail->next = NULL;
+    }
+    else 
+    {
+        ListNode* current = list->head;
+        
+        // travel to node that comes before index
+        for (int i = 0; i < index - 1; i++)
+        {
+            if (current->next == NULL)
+            {
+                break;
+            }
+            current = current->next;
+        }
+
+        // store node after index
+        ListNode* temp = current->next;
+
+        // isolate node to be freed by connect node at index with node after node to be freed
+        current->next = current->next->next;
+
+        free_item(temp->value);
+        temp->value = NULL;
+        free(temp);
+        temp = NULL;
+    }
+
+    list->itemCount--;
+    return EXIT_SUCCESS;
+}
+
+int ll_reverse(LinkedList* list)
+{
+    if (list->head == NULL)
+    {
+        // list is empty
+        return EXIT_FAILURE;
+    }
+    ListNode* current = list->head->next;
+    ListNode* previous = list->head;
+    previous->next = NULL;
+	while (current != NULL)
+	{
+		ListNode* next = current->next;
+		current->next = previous;
+		previous = current;
+		current = next;
+	}
+	list->head = previous;
+    return EXIT_SUCCESS;
+}
+
+void* ll_search(LinkedList* list, const void* search, int compare(const void*, const void*))
+{
+    ListNode* current = list->head;
+    int position = 0;
+    while (current != NULL)
+    {
+        if (compare(current->value, search) == EXIT_SUCCESS)
+        {
+            return current->value;
+        }
+        position++;
+        current = current->next;
+    }
+    return NULL;
+}
+
+int ll_search_int(LinkedList* list, int search)
+{
+    return *(int*)ll_search(list, &search, compare_int);
+}
+
+char* ll_search_str(LinkedList* list, char* search)
+{
+    return (char*)ll_search(list, (void*)search, compare_str);
+}
+
+char ll_search_chr(LinkedList* list, char search)
+{
+    return *(char*)ll_search(list, &search, compare_int);
+}
+
+int ll_map(LinkedList* list, void map(const void*))
+{
+    ListNode* current = list->head;
+    while (current != NULL)   
+    {
+        map(current->value);
+    }
+    return EXIT_SUCCESS;
+}
+
+// performs free_item() on each item in the linked list
+// if free_item is NULL will default to basic free function
+int ll_free(LinkedList* list, void (*free_item)(void*))
+{
+    // allow override of default free function with user's own
+    // this allows for larger free functions for complex structs
+    if (free_item == NULL)
+    {
+        free_item = free;
+    }
+
+    if (list == NULL)
+    {
+        free(list);
+        list = NULL;
+        return EXIT_SUCCESS;
+    }
+
+    if (list->head == NULL)
+    {
+        free(list);
+        list = NULL;
+        return EXIT_SUCCESS;
+    }
+
+    ListNode* previous = list->head;
+
+    if (list->head->next != NULL)
+    {
+        list->head = list->head->next;
+    }
+    else 
+    {
+        free_item(previous->value);
+        free(previous);
+        free(list);
+        previous = NULL;
+        list = NULL;
+        return EXIT_SUCCESS;
+    }
+    
+
+    while (list->head != NULL)
+    {
+        free_item(previous->value);
+        free(previous);
+        previous = list->head;
+        list->head = list->head->next;
+    }
+
+    free_item(previous->value);
+    free(previous);
+    free(list);
+    previous = NULL;
+    list = NULL;
+    return EXIT_SUCCESS;
+}
+
+const struct LibLinkedList_l LibLinkedList = {
+    .create = ll_create,
+    .insert = ll_insert,
+    .insert_int = ll_insert_int,
+    .insert_chr = ll_insert_chr,
+    .insert_dbl = ll_insert_dbl,
+    .insert_flt = ll_insert_flt,
+    .insert_str = ll_insert_str,
+    .print = ll_print,
+    .delete = ll_delete,
+    .reverse = ll_reverse,
+    .search = ll_search,
+    .search_int = ll_search_int,
+    .search_str = ll_search_str,
+    .search_chr = ll_search_chr,
+    .map = ll_map,
+    .free = ll_free
+};
