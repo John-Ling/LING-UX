@@ -9,8 +9,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #1c0902;
+    background-color: #000000;
     font-family: "PixelCode";
+    color: #e5a700 !important;
 }
 
 
@@ -18,20 +19,22 @@
     position: relative;
     width: 100%;
     height: 100%;
-    background-color: #1c0902;
+    margin: auto;
+    background-color: #FF0000;
     box-sizing: border-box;
     z-index: 0;
 }
 
 .vignette {
     position: absolute;
-    width: 100vw;
-    height: 100vh;
+    width: 60vw;
+    height: 90vh;
     -webkit-box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
     -moz-box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
-    box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
+    box-shadow: inset 0px 0px 100px hsl(20 100% 11.2%);
+    border-radius: 4rem;
     inset: 0;
-    z-index: 4;
+    z-index: 1;
     pointer-events: none;
 }
 
@@ -56,15 +59,21 @@
 
 .terminal-container {
     position: relative;
-    z-index: 2;
-    height: 100%;
-    overflow-y: auto;
+    width: 60vw;
+    height: 90vh;
+    background-color: #1c0902;
+    border-radius: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .terminal {
-    height: 100%;
+    height: 83%;
+    width: 83%;
     text-align: left;
     background-color: #1c0902;
+    z-index: 2;
 }
 
 .xterm-rows span {
@@ -93,6 +102,10 @@
 .xterm .xterm-viewport {
     background-color: #1c0902 !important;
 }
+.xterm-helper-textarea {
+    color: #e5a700 !important;   
+}
+
 .blue {
     color: #77b2db;
     text-shadow:

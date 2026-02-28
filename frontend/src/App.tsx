@@ -86,7 +86,16 @@ function App() {
 
     const terminal = new Terminal({
       fontFamily: "PixelCode",
-      theme: { background: "#1c0902" }
+      cursorStyle: "block",
+      theme: { 
+        background: "#1c0902",
+        foreground: "#e5a700",
+        cursor: "#e5a700",
+        cursorAccent: "#1c0902",
+        selectionForeground: "#1c0902",
+        selectionInactiveBackground: "#e5a700",
+        selectionBackground: "#e5a700"
+       }
     });
 
     const fitAddon = new FitAddon();
@@ -95,10 +104,12 @@ function App() {
     if (!terminalRef.current) return;
 
     terminal.open(terminalRef.current);
+    // terminal.focus();
     fitAddon.fit();
 
     xtermRef.current = terminal;
     fitAddonRef.current = fitAddon;
+    // terminal.write("Hello World");
 
     terminal.onData(handleData);
 
@@ -115,16 +126,14 @@ function App() {
 
   return (
     <div className="root">
-      <div className="container">
         {/* <div className="terminal-overlay"/> */}
-        <div className="vignette" />
         <div className="terminal-container">
+          <div className="vignette" />
           <div
             className="terminal"
             ref={terminalRef}
           />
         </div>
-      </div>
     </div>
   );
 }

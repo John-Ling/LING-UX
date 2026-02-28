@@ -88,9 +88,8 @@ def register_handlers(
                 None,
             )
     
-        def decode_data(bytes):
-            # Remove ansi escape codes for removing colours
-            ansi_escape_pattern = re.compile(rb'\x1b\[[0-9;]*m')  # colours only
+        def strip_and_decode(bytes):
+            ansi_escape_pattern = re.compile(rb'\x1b\[[0-9;]*m')  # Remove colours only
             cleaned = ansi_escape_pattern.sub(b'', bytes)
 
             return cleaned.decode("utf-8", errors="ignore")
@@ -119,7 +118,7 @@ def register_handlers(
 
                     output = await loop.run_in_executor(
                         executor=None,
-                        func=lambda: decode_data(socket.recv(READ_SIZE)),
+                        func=lambda: strip_and_decode(socket.recv(READ_SIZE)),
                     )
                     if not output:
                         logger.info(f"Session {session.id} container exited")
