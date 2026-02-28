@@ -2,10 +2,11 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from collections import defaultdict
-from routes.socketio import pty
 import uvicorn
+import docker
 
 from models.session import Session
+from routes.socketio import pty
 from logger import logger
 
 # Only one session should exist per session id
@@ -25,7 +26,10 @@ app.add_middleware(
 )
 
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
-pty.register_handlers(sio, sessions)
+
+docker_client = docker.from_env()
+
+pty.register_handlers(sio, sessions, docker_client)
 
 
 @app.get("/sessions")
