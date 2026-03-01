@@ -104,7 +104,6 @@ function App() {
     if (!terminalRef.current) return;
 
     terminal.open(terminalRef.current);
-    // terminal.focus();
     fitAddon.fit();
 
     xtermRef.current = terminal;
@@ -126,9 +125,9 @@ function App() {
 
   return (
     <div className="root">
-        {/* <div className="terminal-overlay"/> */}
         <div className="terminal-container">
           <div className="vignette" />
+          {/* <div className="terminal-overlay"/> */}
           <div
             className="terminal"
             ref={terminalRef}

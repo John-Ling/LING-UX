@@ -20,7 +20,7 @@
     width: 100%;
     height: 100%;
     margin: auto;
-    background-color: #FF0000;
+    background-color: #1c0902;
     box-sizing: border-box;
     z-index: 0;
 }
@@ -29,9 +29,9 @@
     position: absolute;
     width: 60vw;
     height: 90vh;
-    -webkit-box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
-    -moz-box-shadow: inset 0px 0px 80px hsl(20 100% 11.2%);
-    box-shadow: inset 0px 0px 100px hsl(20 100% 11.2%);
+    -webkit-box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
+    -moz-box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
+    box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
     border-radius: 4rem;
     inset: 0;
     z-index: 1;
@@ -40,11 +40,12 @@
 
 .terminal-overlay {
     position: absolute;
-    background: repeating-linear-gradient(180deg, rgba(32, 21, 10, 0.3) 1px, transparent 20px);
+    background: repeating-linear-gradient(180deg, rgba(32, 21, 10, 0.3) 1px, transparent 10px);
     border-radius: 6rem;
     inset: 0;
     z-index: 3;
     animation: scan 22s linear infinite;
+    pointer-events: none;
 }
 
 @keyframes scan {
@@ -83,6 +84,20 @@
         0 0 20px #FF0000;
     user-select: text;
     font-weight: 700;
+}
+
+span {
+    color: #e5a700 !important;
+    background-color: #1c0902 !important;
+    text-shadow:
+        0 0 2px #fff71c,
+        0 0 20px #FF0000;
+    user-select: text;
+    font-weight: 700;    
+}
+
+.slider {
+    background-color: transparent !important;
 }
 
 .xterm-cursor {

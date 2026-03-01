@@ -87,12 +87,6 @@ def register_handlers(
                 ),
                 None,
             )
-    
-        def strip_and_decode(bytes):
-            ansi_escape_pattern = re.compile(rb'\x1b\[[0-9;]*m')  # Remove colours only
-            cleaned = ansi_escape_pattern.sub(b'', bytes)
-
-            return cleaned.decode("utf-8", errors="ignore")
 
         while True:
             _sessions = [get_session(sid) for sid in sessions.keys()]
@@ -118,12 +112,12 @@ def register_handlers(
 
                     output = await loop.run_in_executor(
                         executor=None,
-                        func=lambda: strip_and_decode(socket.recv(READ_SIZE)),
+                        func=lambda: socket.recv(READ_SIZE).decode(errors="ignore"),
                     )
                     if not output:
                         logger.info(f"Session {session.id} container exited")
 
-                    logger.info(f"Sending {output} to session {session.id}")
+                    logger.info(f"Sending to session {session.id}")
                     await sio.emit("pty-receive", {"output": output}, to=session.id)
                 except OSError as err:
                     # Ignore OS reading errors to keep the sessions going
@@ -140,10 +134,11 @@ def register_handlers(
         print("The connection failed!")
 
     @sio.event
-    def disconnect(sid):
+    async def disconnect(sid):
+        loop = asyncio.get_running_loop()
         logger.info(f"Closing session {sid}")
         session = get_session(sid)
         if session:
-            session.close()
+            await loop.run_in_executor(executor=None, func=lambda: session.close())
             del sessions[sid]
             logger.info(f"Closing completed")
