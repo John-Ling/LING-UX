@@ -1,4 +1,5 @@
-# Algorithms are fun
+Welcome to John's web terminal! Created to show off various C programs (mostly data structure libraries).
+Currently, you're running in a newly created Docker container running bash. Everything's been secured so don't try anything funny (if you do please let me know and I'll give you $20).
 
-A collection of data structures and algorithms I've found and implemented through C (maybe Python if I'm feeling lazy).
-These algorithms are NOT efficient. They prioritise being understandable and easy to visualise over various tricks to improve performance. The idea is that you (you being me) can understand fundamentally how they work easily. Then you (still me) can search online for more efficient implementations should they actually need to use them for a non-trivial program.
+- Feel free to explore the programs with nano (or vim if you're cool).
+- Use the makefile to build the libraries and their example programs

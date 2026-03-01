@@ -27,12 +27,11 @@
 
 .vignette {
     position: absolute;
-    width: 60vw;
-    height: 90vh;
+    width: 100vw;
+    height: 100vh;
     -webkit-box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
     -moz-box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
     box-shadow: inset 0px 0px 90px hsl(20 100% 11.2%);
-    border-radius: 4rem;
     inset: 0;
     z-index: 1;
     pointer-events: none;
@@ -60,18 +59,17 @@
 
 .terminal-container {
     position: relative;
-    width: 60vw;
-    height: 90vh;
+    width: 100vw;
+    height: 100vh;
     background-color: #1c0902;
-    border-radius: 4rem;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .terminal {
-    height: 83%;
-    width: 83%;
+    height: 86%;
+    width: 86%;
     text-align: left;
     background-color: #1c0902;
     z-index: 2;
