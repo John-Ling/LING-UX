@@ -1,11 +1,12 @@
 
 import { Terminal } from '@xterm/xterm';
 import './App.css'
-import { io } from 'socket.io-client';
 import { useEffect, useRef, useState } from 'react'
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import type { DisconnectDescription, Socket } from 'socket.io-client';
+import { useSocketConnection } from './hooks/useSocketConnection';
+import { useSound } from './hooks/useSound';
 
 function App() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
@@ -24,6 +25,7 @@ function App() {
   const handleResizeRef = useRef<(() => void) | null>(null);
   const [splashCompleted, setSplashCompleted] = useState<boolean>(false);
   const [fontLoaded, setFontLoaded] = useState<boolean>(true);
+  const [appStarted, setAppStarted] = useState<boolean>(false);
 
   // Update the ref when dependencies change
   useEffect(() => {
@@ -47,7 +49,6 @@ function App() {
       // Set pty size based on current client size
       self.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
     }
-
   }
 
   const socketClose = (reason: Socket.DisconnectReason, description?: DisconnectDescription) => {
@@ -55,6 +56,9 @@ function App() {
   }
 
   const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose);
+  const { playOnce: beep } = useSound("beep");
+  const { playOnce: startupClick } = useSound("startup_click");
+  const { playLoop: loopIdle} = useSound("idle");
 
   const splashScreen = async () => {
     const terminal = xtermRef.current;
@@ -71,8 +75,14 @@ function App() {
 
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+    startupClick();
+    await sleep(100);
+    loopIdle();
+    await sleep(1000);
+    beep();
     terminal.writeln("Starting system...");
     await sleep(500);
+
     await printLines([
       "Linux version 6.8.0-47-generic (buildd@lcy02-amd64-080) (x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-23ubuntu4) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #47-Ubuntu SMP PREEMPT_DYNAMIC Sun August  7 07:51:54 UTC 1982\n\r",
       "Command line: BOOT_IMAGE=/boot/vmlinuz-6.8.0-47-generic root=UUID=a1b2c3d4-e5f6-7890-abcd-ef1234567890 ro quiet splash vt.handoff=7\n\r",
@@ -95,6 +105,7 @@ function App() {
       100
     );
 
+
     await printLines(
       ["NX (Execute Disable) protection: active\n\r",
         "APIC: Static calls initialized\n\r",
@@ -106,6 +117,7 @@ function App() {
       200
     )
 
+
     await printLines(
       ["ACPI: RSDP 0x000000007FF0A014 000024 (v02 COREv4)\n\r",
         "ACPI: XSDT 0x000000007FF090E8 000064 (v01 COREv4 COREBOOT 00000000      01000013)\n\r",
@@ -114,10 +126,11 @@ function App() {
         "ACPI: TCPA 0x000000007FEFF000 000032 (v02 COREv4 COREBOOT 00000000 CORE 20230628)\n\r",
         "ACPI: HPET 0x000000007FEFD000 000038 (v01 COREv4 COREBOOT 00000000 CORE 20230628)\n\r",
         "ACPI: TCPA 0x000000007FEFC000 000032 (v02 INTEL  EDK2     00000002      01000013)\n\r",
-        "Ready!\n\r"], 100
+        "Ready!\n\r"], 150
     );
 
     await sleep(200);
+
     terminal.clear();
     await printLines([
       "██╗     ██╗███╗  ██╗ ██████╗       ██╗   ██╗██╗  ██╗\n\r",
@@ -165,7 +178,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!fontLoaded) {
+    if (!fontLoaded || !appStarted) {
       return;
     }
 
@@ -196,10 +209,7 @@ function App() {
 
     splashScreen();
 
-    console.log("[LOG] Splash screen completed. Unblocking");
-
     terminal.onData(handleData);
-
     handleResizeRef.current = handleResize;
     window.addEventListener('resize', handleResize);
 
@@ -209,75 +219,27 @@ function App() {
       }
       xtermRef.current?.dispose();
     };
-  }, [fontLoaded]);
+  }, [fontLoaded, appStarted]);
 
   return (
     <div className="root">
       <div className="terminal-container">
         <div className="vignette" />
-        {/* <div className="terminal-overlay"/> */}
-        <div
-          className="terminal"
-          ref={terminalRef}
-        />
+        {
+          !appStarted
+            ?
+            <div onClick={() => setAppStarted(true)} className="click-area">
+              <p>Click to Start</p>
+            </div>
+            :
+            <div
+              className="terminal"
+              ref={terminalRef}
+            />
+        }
       </div>
     </div>
   );
-}
-
-const useSocketConnection = (
-  onReceive: (data: any) => void,
-  onOpen: (self: Socket) => any,
-  onClose: (reason: Socket.DisconnectReason, description?: DisconnectDescription) => any,
-) => {
-  const socketRef = useRef<Socket | null>(null);
-  const sessionIdRef = useRef<string | null>(null);
-
-  // Establish websocket connection
-  useEffect(() => {
-    console.log("[LOG] connecting to session");
-
-    const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
-    if (!socket) {
-      return;
-    }
-
-    socketRef.current = socket;
-
-    socket.on("connect", () => onOpen(socket));
-    socket.on("disconnect", (reason, description) => onClose(reason, description));
-    socket.on("session_created", (data) => {
-      console.log("[LOG] session created successfully")
-      console.log(data)
-      sessionIdRef.current = data.sid;
-    });
-
-    // Handle IO from pty
-    socket.on("pty-receive", (data) => onReceive(data))
-
-    return () => {
-      console.log("[LOG] Closing socket");
-      socket.close();
-    }
-  }, []);
-
-  const handle_tab_close = () => {
-    const socket = socketRef.current;
-    if (!socket) {
-      return;
-    }
-    console.log("[LOG] CLOSING WEBSOCKET")
-    socket.close();
-  }
-
-  // Close socket when tab is closed
-  useEffect(() => {
-    window.addEventListener("beforeunload", handle_tab_close);
-    return () => {
-      window.removeEventListener("beforeunload", handle_tab_close);
-    }
-  }, []);
-  return { socketRef, sessionIdRef };
 }
 
 export default App
