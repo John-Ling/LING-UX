@@ -478,9 +478,7 @@ static int _resize(HashTable* table)
 					return EXIT_FAILURE;
 			}
 
-		
 			LibLinkedList.insert(resized[insertBucket], (void*)insertPair, -1);
-			resized[i]->itemCount = table->buckets[i]->itemCount;
 			free(insertPair);
 			
 			current = current->next;

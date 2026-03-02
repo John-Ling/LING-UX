@@ -17,7 +17,6 @@ def copy_to_container(container, src_pattern: str, dest_path: str):
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
-
 def move_shared_objects_and_headers(container: Container):
     # Move shared objects and headers to parts of the home that need them
     copy_to_container(
@@ -43,6 +42,42 @@ def move_shared_objects_and_headers(container: Container):
         "/home/john/Projects/web-shell-64/backend/shared/include/*",
         "/home/guest/data-structures-and-algorithms/data-structures",
     )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/include/hash_table.h",
+    #     "/home/guest/markov-chain-text-generator/include",
+    # )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/include/linked_lists.h",
+    #     "/home/guest/markov-chain-text-generator/include",
+    # )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/include/utils.h",
+    #     "/home/guest/markov-chain-text-generator/include",
+    # )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/lib/libhashtable.so",
+    #     "/home/guest/markov-chain-text-generator/lib",
+    # )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/lib/liblinkedlist.so",
+    #     "/home/guest/markov-chain-text-generator/lib",
+    # )
+
+    # copy_to_container(
+    #     container,
+    #     "/home/john/Projects/web-shell-64/backend/shared/lib/libutils.so",
+    #     "/home/guest/markov-chain-text-generator/lib",
+    # )
 
 
 class Session:
