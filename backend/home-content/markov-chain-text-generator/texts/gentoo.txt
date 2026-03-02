@@ -1,0 +1,6 @@
+Gentoo Linuxs a Linux distribution built using the Portage package management system. Unlike a binary software distribution, the source code is compiled locally according to the user's preferences and is often optimized for the specific type of computer. Precompiled binaries are available for some packages.
+Gentoo runs on a wide variety of processor architectures.
+
+Gentoo package management is designed to be modular, portable, easy to maintain, and flexible. Gentoo describes itself as a meta-distribution because of its adaptability, in that the majority of its users have configurations and sets of installed programs which are unique to the system and the applications they use.
+Gentoo Linux is named after the gentoo penguin, the fastest swimming species of penguin. The name was chosen to reflect the potential speed improvements of machine-specific optimizing, which is a major feature of Gentoo
+Gentoo Linux was initially created by Daniel Robbins as the Enoch Linux distribution. Its design philosophy was that of precompiled binaries which were tuned to the hardware and that only included required programs.

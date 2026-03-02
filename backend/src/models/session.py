@@ -18,6 +18,33 @@ def copy_to_container(container, src_pattern: str, dest_path: str):
     container.put_archive(dest_path, buf)
 
 
+def move_shared_objects_and_headers(container: Container):
+    # Move shared objects and headers to parts of the home that need them
+    copy_to_container(
+        container,
+        "/home/john/Projects/web-shell-64/backend/shared/lib/*",
+        "/home/guest/data-structures-and-algorithms/algorithms",
+    )
+
+    copy_to_container(
+        container,
+        "/home/john/Projects/web-shell-64/backend/shared/lib/*",
+        "/home/guest/data-structures-and-algorithms/data-structures",
+    )
+
+    copy_to_container(
+        container,
+        "/home/john/Projects/web-shell-64/backend/shared/include/*",
+        "/home/guest/data-structures-and-algorithms/algorithms",
+    )
+
+    copy_to_container(
+        container,
+        "/home/john/Projects/web-shell-64/backend/shared/include/*",
+        "/home/guest/data-structures-and-algorithms/data-structures",
+    )
+
+
 class Session:
     def __init__(self, id: int, docker_client: DockerClient):
         self.id = id
@@ -48,6 +75,8 @@ class Session:
             "/home/john/Projects/web-shell-64/backend/home-content/*",
             "/home/guest",
         )
+
+        move_shared_objects_and_headers(self.container)
 
         self.socket: Any = self.container.attach_socket(
             params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}

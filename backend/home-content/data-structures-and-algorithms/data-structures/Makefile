@@ -12,6 +12,9 @@ else
 	CFLAGS += $(PROD_CFLAGS)
 endif
 
+patricia_trie:
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o patricia_trie patricia_trie_example.c  patricia_trie.c 
+
 linkedlist: 
 	$(CC) $(CFLAGS) $(LDFLAGS)  -o linked_list linked_lists_example.c -llinkedlist -lutils
 
@@ -20,6 +23,9 @@ skiplist:
 
 queue:
 	$(CC) $(CFLAGS) $(LDFLAGS)  -o queues queues_example.c -llinkedlist -lutils -lqueue 
+
+stack: 
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o stack stack_example.c -llinkedlist -lutils -lstack
 
 hashtable:
 	$(CC) $(CFLAGS) $(LDFLAGS)  -o hash_table hash_table_example.c -llinkedlist -lutils  -lhashtable

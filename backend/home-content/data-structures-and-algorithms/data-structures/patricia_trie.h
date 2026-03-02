@@ -39,7 +39,6 @@ int _find_bit_mismatch(const char* a, const char* b, int bitCountA, int bitCount
 char* _find_bit_suffix(char* key, int startBit);
 char* _find_common_prefix(char* a, char* b);
 
-int _editDistance(char *str1, char *str2, int n, int m);
 int _min(int a, int b, int c);
 /* Helper function. Gets the bit at bitIndex from the string s. */
 int _get_bit(const char *s, unsigned int bitIndex);
