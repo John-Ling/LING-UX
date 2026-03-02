@@ -4,7 +4,6 @@ DBG_CFLAGS := -g -O0 -DDEBUG
 PROD_CFLAGS := -O2 -flto 
 LDFLAGS := -L./lib -Wl,-rpath,'$$ORIGIN/../lib'
 OBJ := $(SRC:.c=.o)
-BIN := bin/*
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
@@ -13,33 +12,23 @@ else
 	CFLAGS += $(PROD_CFLAGS)
 endif
 
-
 linkedlist: 
-	$(CC) $(CFLAGS) $(LDFLAGS) -llinkedlist -lutils -o bin/linked_list linked_lists_example.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o linked_list linked_lists_example.c -llinkedlist -lutils
 
 skiplist:
-	$(CC) $(CFLAGS) $(LDFLAGS)  -llinkedlist -lutils -lskiplist -o bin/skip_list skip_list_example.c
+	$(CC) $(CFLAGS) $(LDFLAGS)   -o skip_list skip_list_example.c -llinkedlist -lutils -lskiplist
 
 queue:
-	$(CC) $(CFLAGS) $(LDFLAGS)  -llinkedlist -lutils -lqueue -o bin/queues queues_example.c
-
-quicksort:
-	$(CC) $(CFLAGS) $(LDFLAGS)-lutils -o bin/quicksort quicksort.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o queues queues_example.c -llinkedlist -lutils -lqueue 
 
 hashtable:
-	$(CC) $(CFLAGS) $(LDFLAGS)  -llinkedlist -lutils  -lhashtable -o bin/hash_table hash_table_example.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o hash_table hash_table_example.c -llinkedlist -lutils  -lhashtable
 
 bloomfilter:
-	$(CC) $(CFLAGS) $(LDFLAGS) -lbloomfilter -o bin/bloom_filter bloom_filter_example.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o bloom_filter bloom_filter_example.c -lbloomfilter 
 
 cuckoofilter:
-	$(CC) $(CFLAGS) $(LDFLAGS) -lcuckoofilter -o bin/cuckoo_filter cuckoo_filter_example.c
-
-hashtablebench:
-	$(CC) $(CFLAGS) $(LDFLAGS) -llinkedlist -lutils -lhashtable -o bin/hash_bench hash_table_benchmark.c
-
-cuckoofilterbench:
-	$(CC) $(CFLAGS) $(LDFLAGS) -lcuckoofilter -o bin/cuckoo_bench cuckoo_filter_benchmark.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o cuckoo_filter cuckoo_filter_example.c -lcuckoofilter
 
 libutils:
 	$(CC) $(CFLAGS) -fPIC -c LibUtils/*.c -o LibUtils/utils.o
@@ -61,6 +50,11 @@ libqueue:
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o lib/libqueue.so -llinkedlist -lutils LibQueue/queue.o
 	rm LibQueue/queue.o
 
+libstack:
+	$(CC) $(CFLAGS) -fPIC -c LibStack/*.c -o LibStack/stack.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o lib/libstack.so -llinkedlist -lutils LibStack/stack.o
+	rm LibStack/stack.o
+
 libhashtable:
 	$(CC) $(CFLAGS) -fPIC -c LibHashTable/*.c -o LibHashTable/hash_table.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o lib/libhashtable.so -llinkedlist -lutils LibHashTable/hash_table.o
@@ -75,7 +69,3 @@ libcuckoofilter:
 	$(CC) $(CFLAGS) -fPIC -c LibCuckooFilter/*.c -o LibCuckooFilter/cuckoo_filter.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o lib/libcuckoofilter.so -lm LibCuckooFilter/cuckoo_filter.o
 	rm LibCuckooFilter/cuckoo_filter.o
-
-.PHONY: clean
-clean:
-	rm -f $(BIN)
