@@ -25,21 +25,20 @@ class Session:
         self.container: Container = docker_client.containers.run(
             "web-shell-user-container:latest",
             command=["/bin/bash", "--rcfile", "/etc/bash.bashrc"],
-            working_dir="/home",
+            working_dir="/home/guest",
             name=f"session_{id}",
             detach=True,
             tty=True,
             stdin_open=True,
             network_mode="none",
             mem_limit="128m",
-            user="1000:1000",  
+            user="1000:1000",
             nano_cpus=500_000_000,
             cap_drop=["ALL"],
             security_opt=["no-new-privileges:true"],
             remove=False,
             tmpfs={"/tmp": "size=64m,mode=1777"},
             environment={
-                "TERM": "vt100",
                 "PS1": r"guest@workstation \w $ ",
             },
         )
@@ -47,7 +46,7 @@ class Session:
         copy_to_container(
             self.container,
             "/home/john/Projects/web-shell-64/backend/home-content/*",
-            "/home",
+            "/home/guest",
         )
 
         self.socket: Any = self.container.attach_socket(

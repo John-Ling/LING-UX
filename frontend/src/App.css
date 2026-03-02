@@ -39,11 +39,10 @@
 
 .terminal-overlay {
     position: absolute;
-    background: repeating-linear-gradient(180deg, rgba(32, 21, 10, 0.3) 1px, transparent 10px);
-    border-radius: 6rem;
+    background: repeating-linear-gradient(180deg, rgba(14, 32, 12, 0.79) 1px, transparent 10px);
+    opacity: 0.3;
     inset: 0;
     z-index: 3;
-    animation: scan 22s linear infinite;
     pointer-events: none;
 }
 
@@ -75,6 +74,12 @@
     z-index: 2;
 }
 
+.xterm-viewport, .xterm-rows {
+    user-select: none;
+    -webkit-user-select: none; 
+    -moz-user-select: none; 
+    -ms-user-select: none;
+}
 .xterm-rows span {
     color: #e5a700;
     text-shadow:
@@ -90,16 +95,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
+
+    p {
+        user-select: none;
+    }
 }
 
-p, span {
+p,
+span {
     color: #e5a700 !important;
     background-color: #1c0902 !important;
     text-shadow:
         0 0 2px #fff71c,
         0 0 20px #FF0000;
     user-select: text;
-    font-weight: 700;    
+    font-weight: 700;
 }
 
 .slider {
@@ -123,6 +133,7 @@ p, span {
 .xterm .xterm-viewport {
     background-color: #1c0902 !important;
 }
+
 .xterm-helper-textarea {
-    color: #e5a700 !important;   
+    color: #e5a700 !important;
 }

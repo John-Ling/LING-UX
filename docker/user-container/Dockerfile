@@ -8,14 +8,18 @@ RUN apt-get update && apt-get install -y \
     btop \
     locales \
     nano \
+    binutils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN chmod -R 777 /home
+
+RUN echo 'export PS1="\u@\h \w \$ "' >> /etc/bash.bashrc
 
 RUN echo "en_GB.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen en_GB.UTF-8
 
 RUN useradd -m guest && chown -R guest:guest /home
+
 ENV LANG=en_GB.UTF-8
 ENV LANGUAGE=en_GB:en
 ENV LC_ALL=en_GB.UTF-8

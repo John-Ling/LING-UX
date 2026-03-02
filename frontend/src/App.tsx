@@ -42,13 +42,6 @@ function App() {
   const socketOpen = async (self: Socket) => {
     console.log("[LOG] Opening websocket connection");
     self.emit("create_session");
-
-    const terminal = xtermRef.current;
-    if (terminal) {
-      console.log("[LOG] Setting terminal size to match initial client size");
-      // Set pty size based on current client size
-      self.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
-    }
   }
 
   const socketClose = (reason: Socket.DisconnectReason, description?: DisconnectDescription) => {
@@ -117,7 +110,6 @@ function App() {
       200
     )
 
-
     await printLines(
       ["ACPI: RSDP 0x000000007FF0A014 000024 (v02 COREv4)\n\r",
         "ACPI: XSDT 0x000000007FF090E8 000064 (v01 COREv4 COREBOOT 00000000      01000013)\n\r",
@@ -139,8 +131,18 @@ function App() {
       "██║     ██║██║╚████║██║  ╚██╗╚════╝██║   ██║ ██╔██╗ \n\r",
       "███████╗██║██║ ╚███║╚██████╔╝      ╚██████╔╝██╔╝╚██╗\n\r",
       "╚══════╝╚═╝╚═╝  ╚══╝ ╚═════╝        ╚═════╝ ╚═╝  ╚═╝\n\r",
-      "$ "
     ], 300);
+
+    await printLines(
+     [
+      "John Ling's Linux web terminal created to showcase his various CLI projects (mostly data structure libraries).\n\r",
+      "\n\r",
+      "- Feel free to explore the folders with terminal commands.\n\r",
+      "- Check the README for every project with the cat command to learn more about each one.\n\r",
+      "- Expect more projects to appear here over time.\n\r",
+      "$ "
+     ], 200
+    );
 
     setSplashCompleted(true);
   }
@@ -149,6 +151,10 @@ function App() {
     const socket = socketRef.current;
     const terminal = xtermRef.current;
     if (socket && terminal) {
+      console.log("Data ", data)
+      if (data == '\n') {
+        beep();
+      }
       socket.emit("send-to-terminal", { "command": data })
     }
   }
@@ -209,6 +215,12 @@ function App() {
 
     splashScreen();
 
+    const socket = socketRef.current;
+    if (socket) {
+      console.log("Sizing window to initial client size")
+      socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
+    }
+
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;
     window.addEventListener('resize', handleResize);
@@ -225,6 +237,7 @@ function App() {
     <div className="root">
       <div className="terminal-container">
         <div className="vignette" />
+        {/* <div className="terminal-overlay" /> */}
         {
           !appStarted
             ?

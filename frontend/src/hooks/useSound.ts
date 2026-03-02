@@ -1,5 +1,5 @@
 import { useRef, useCallback } from "react";
-import idle from "../assets/wav/idle.wav";
+import idle from "../assets/wav/idle_2.wav";
 import beep from "../assets/wav/beep.wav";
 import startup_click from "../assets/wav/startup_click.wav";
 

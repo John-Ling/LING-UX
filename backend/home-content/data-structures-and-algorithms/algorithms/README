@@ -1,0 +1,25 @@
+A collection of basic algorithms implemented in C created while I took COMP10002 (Foundations of Algorithms).
+
+
+Implemented so far:
+
+Sorting Algorithms:
+- Quicksort
+- Bubble Sort
+- Insertion Sort
+- Heapsort
+- Bogosort
+- Mergesort
+
+Search:
+- Linear Search
+- Binary Search
+
+Pattern Search:
+- Naive Pattern Search
+- Knuth Morris Pratt (KMP) 
+- Boyer Moore Horspool (BMH)
+- Suffix Array Pattern Search 
+
+Graphs:
+- BFS and DFS
