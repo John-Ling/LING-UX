@@ -29,7 +29,7 @@ def register_handlers(
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
         """
-        Receives data from a specific client and writes to the correct pty
+        Receives data from a specific client and writes to the correct socket
         """
         session = get_session(sid)
         if session is None:
@@ -118,22 +118,15 @@ def register_handlers(
                         logger.info(f"Session {session.id} container exited")
 
                     logger.info(f"Sending to session {session.id}")
-                    await sio.emit("pty-receive", {"output": output}, to=session.id)
+                    await sio.emit("terminal-receive", {"output": output}, to=session.id)
                 except OSError as err:
                     # Ignore OS reading errors to keep the sessions going
                     logger.exception(f"Failure: {err}")
 
             await asyncio.sleep(0.05)  # Yield to event loop
 
-    @sio.event
-    def connect(sid, environ):
-        print("I'm connected!")
 
-    @sio.event
-    def connect_error(data):
-        print("The connection failed!")
-
-    @sio.event
+    @sio.on("disconnect")
     async def disconnect(sid):
         loop = asyncio.get_running_loop()
         logger.info(f"Closing session {sid}")

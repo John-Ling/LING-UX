@@ -22,6 +22,7 @@ function App() {
       terminal.write(data["output"]);
     }
   });
+
   const handleResizeRef = useRef<(() => void) | null>(null);
   const [splashCompleted, setSplashCompleted] = useState<boolean>(false);
   const [fontLoaded, setFontLoaded] = useState<boolean>(true);
@@ -50,6 +51,7 @@ function App() {
 
   const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose);
   const { playOnce: beep } = useSound("beep");
+  const { playOnce: hddClick } = useSound("hdd_click");
   const { playOnce: startupClick } = useSound("startup_click");
   const { playLoop: loopIdle} = useSound("idle");
 
@@ -74,6 +76,7 @@ function App() {
     await sleep(1000);
     beep();
     terminal.writeln("Starting system...");
+    hddClick();
     await sleep(500);
 
     await printLines([
@@ -138,8 +141,8 @@ function App() {
       "John Ling's Linux web terminal created to showcase his various CLI projects (mostly data structure libraries).\n\r",
       "\n\r",
       "- Feel free to explore the folders with terminal commands.\n\r",
-      "- Check the README for every project with the cat command to learn more about each one.\n\r",
-      "- Expect more projects to appear here over time.\n\r",
+      "- Check the README for every project with command \"about\" to learn more about each one.\n\r",
+      "- Expect more projects to appear here over time, probably written in Rust.\n\r",
       "$ "
      ], 200
     );
@@ -152,10 +155,6 @@ function App() {
     const socket = socketRef.current;
     const terminal = xtermRef.current;
     if (socket && terminal) {
-      console.log("Data ", data)
-      if (data == '\n') {
-        beep();
-      }
       socket.emit("send-to-terminal", { "command": data })
     }
   }
@@ -166,12 +165,26 @@ function App() {
     const fitAddon = fitAddonRef.current;
     if (fitAddon && socket && terminal) {
       fitAddon.fit();
-      // Resize pty on backend
+      // Resize terminal on backend
       socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols })
     }
 
   }
 
+  // Play ambient sound effects randomly
+  useEffect(() => {
+   const intervalId = setInterval(() => {
+    if (Math.floor(Math.random() * 3) === 0)  {
+      hddClick();
+    }
+   }, 10000);
+
+   return () => {
+    clearInterval(intervalId);
+   }
+  }, []);
+
+  // Load font
   useEffect(() => {
     const loadFont = async () => {
       await document.fonts.load("1em PixelCode");
@@ -184,6 +197,7 @@ function App() {
     }
   }, [])
 
+  // Initialise terminal
   useEffect(() => {
     if (!fontLoaded || !appStarted) {
       return;
@@ -221,7 +235,6 @@ function App() {
       console.log("Sizing window to initial client size")
       socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
     }
-
 
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;

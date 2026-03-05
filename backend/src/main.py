@@ -6,7 +6,7 @@ import uvicorn
 import docker
 
 from models.session import Session
-from routes.socketio import pty
+from routes.socketio import sockets
 from logger import logger
 
 # Only one session should exist per session id
@@ -29,7 +29,7 @@ socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 docker_client = docker.from_env()
 
-pty.register_handlers(sio, sessions, docker_client)
+sockets.register_handlers(sio, sessions, docker_client)
 
 
 @app.get("/sessions")

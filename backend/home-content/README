@@ -1,0 +1,11 @@
+██╗     ██╗███╗  ██╗ ██████╗       ██╗   ██╗██╗  ██╗
+██║     ██║████╗ ██║██╔════╝       ██║   ██║╚██╗██╔╝
+██║     ██║██╔██╗██║██║  ██╗ █████╗██║   ██║ ╚███╔╝ 
+██║     ██║██║╚████║██║  ╚██╗╚════╝██║   ██║ ██╔██╗ 
+███████╗██║██║ ╚███║╚██████╔╝      ╚██████╔╝██╔╝╚██╗
+╚══════╝╚═╝╚═╝  ╚══╝ ╚═════╝        ╚═════╝ ╚═╝  ╚═╝
+
+John Ling's Linux web terminal created to showcase his various CLI projects (mostly data structure libraries)
+- Feel free to explore the folders with terminal commands.
+- Check the README for every project with command "about" to learn more about each one.
+- Expect more projects to appear here over time, probably written in Rust

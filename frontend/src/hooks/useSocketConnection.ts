@@ -30,8 +30,8 @@ export const useSocketConnection = (
       sessionIdRef.current = data.sid;
     });
 
-    // Handle IO from pty
-    socket.on("pty-receive", (data) => onReceive(data))
+    // Handle IO from terminal
+    socket.on("terminal-receive", (data) => onReceive(data))
 
     return () => {
       console.log("[LOG] Closing socket");

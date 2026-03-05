@@ -1,6 +1,9 @@
 import { useRef, useCallback } from "react";
-import idle from "../assets/wav/idle_2.wav";
+import idle from "../assets/wav/idle_3.wav";
+
 import beep from "../assets/wav/beep.wav";
+import spinup from "../assets/wav/spinup.wav";
+import hdd_click from "../assets/wav/hdd_click.wav";
 import startup_click from "../assets/wav/startup_click.wav";
 
 type SoundKey = keyof typeof sounds;
@@ -8,11 +11,20 @@ type SoundKey = keyof typeof sounds;
 const sounds = {
   idle,
   beep,
+  spinup,
+  hdd_click,
   startup_click,
 };
 
 export const useSound = (soundKey: SoundKey) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const volumes = {
+    idle: 0.1,
+    beep: 0.1,
+    spinup: 0.1,
+    hdd_click: 0.2,
+    startup_click: 0.1,
+  };
 
   const getAudio = useCallback(() => {
     if (!audioRef.current) {
@@ -25,6 +37,7 @@ export const useSound = (soundKey: SoundKey) => {
     const audio = getAudio();
     audio.loop = false;
     audio.currentTime = 0;
+    audio.volume = volumes[soundKey] || 1.0;
     audio.play();
   }, [getAudio]);
 
@@ -32,6 +45,7 @@ export const useSound = (soundKey: SoundKey) => {
     const audio = getAudio();
     audio.loop = true;
     audio.currentTime = 0;
+    audio.volume = volumes[soundKey] || 1.0;
     audio.play();
   }, [getAudio]);
 

@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN chmod -R 777 /home
 
 RUN echo 'export PS1="\u@\h \w \$ "' >> /etc/bash.bashrc
-
+RUN echo "alias about='cat README'" >> /etc/bash.bashrc
 RUN echo "en_GB.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen en_GB.UTF-8
 
