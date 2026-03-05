@@ -26,6 +26,7 @@ static void move_to(int row, int col)
 {
     printf("\033[%d;%dH", row, col);
     fflush(stdout);
+    
 }
 
 static void pause_us(int us) { usleep(us); }

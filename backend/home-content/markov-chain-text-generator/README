@@ -1,0 +1,3 @@
+To further utilise my hash table library, I put together this program that builds an order N Markov model from a text then generate any number of words with them.
+
+Disclaimer, I've since worked on the hash table lib and things broke. Until I update the generator, this is using an older version of the library.

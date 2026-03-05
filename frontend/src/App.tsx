@@ -145,6 +145,7 @@ function App() {
     );
 
     setSplashCompleted(true);
+    terminal.focus();
   }
 
   const handleData = (data: string) => {
@@ -220,6 +221,7 @@ function App() {
       console.log("Sizing window to initial client size")
       socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
     }
+
 
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;

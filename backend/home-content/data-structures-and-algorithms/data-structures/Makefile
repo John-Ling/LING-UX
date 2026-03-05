@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -Wall -Wextra -Wpedantic -I./include
 DBG_CFLAGS := -g -O0 -DDEBUG
 PROD_CFLAGS := -O2 -flto 
-LDFLAGS := -L./lib -Wl,-rpath,'$$ORIGIN/../lib'
+LDFLAGS := -L./lib -Wl,-rpath,'$$ORIGIN/./lib'
 OBJ := $(SRC:.c=.o)
 
 DEBUG ?= 0

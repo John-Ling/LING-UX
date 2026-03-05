@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     locales \
     nano \
     binutils \
+    python3 \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 RUN chmod -R 777 /home

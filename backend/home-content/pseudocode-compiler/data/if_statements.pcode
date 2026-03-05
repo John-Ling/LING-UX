@@ -1,0 +1,20 @@
+DECLARE Name : STRING
+DECLARE Number : INTEGER
+Name <-- "John"
+Number <-- 34234
+
+IF (Name = "John") THEN
+    OUTPUT "Your name is John"
+    OUTPUT "Other"
+ELSE
+    OUTPUT "Your name is not John"
+    OUTPUT "Hello"
+ENDIF
+
+IF (Number > 324) THEN
+    IF Number = 34234 THEN
+        OUTPUT "Number is Exactly", 34234
+    ELSE
+        OUTPUT "Number is larger than 324"
+    ENDIF
+ENDIF
