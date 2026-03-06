@@ -1,0 +1,28 @@
+services:
+  backend:
+    env_file: "./env/.env.production"
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - lingux-network
+
+  frontend:
+    env_file: "./env/.env.production"
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    ports:
+      - "3000:80"
+    networks:
+      - lingux-network
+
+networks:
+  lingux-network:
+    driver: bridge

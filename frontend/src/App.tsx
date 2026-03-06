@@ -4,7 +4,7 @@ import './App.css'
 import { useEffect, useRef, useState } from 'react'
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
-import type { DisconnectDescription, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { useSocketConnection } from './hooks/useSocketConnection';
 import { useSound } from './hooks/useSound';
 
@@ -45,7 +45,7 @@ function App() {
     self.emit("create_session");
   }
 
-  const socketClose = (reason: Socket.DisconnectReason, description?: DisconnectDescription) => {
+  const socketClose = () => {
     console.log("[LOG] Closing websocket. Goodbye :)");
   }
 
