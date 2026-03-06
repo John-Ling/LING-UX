@@ -1,21 +1,22 @@
-FROM python:3.13-slim AS builder
+FROM python:3.13-alpine AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
 
-RUN apt-get update && apt-get install -y \
-    gcc g++ python3-dev libkrb5-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache gcc g++ python3-dev krb5-dev musl-dev
+RUN /bin/uv sync --frozen --no-dev --no-cache
 
-RUN /bin/uv sync --frozen --no-dev
+FROM python:3.13-alpine AS runner
 
-FROM python:3.13-slim AS runner
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libkrb5-3 && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache krb5-libs
 
+COPY --from=builder /app/.venv /app/.venv
 COPY backend/src/ ./
 
+ENV PATH="/app/.venv/bin:$PATH"
+
 EXPOSE 8000
-CMD ["uv", "run", "src/main.py"]
+CMD ["python", "main.py"]

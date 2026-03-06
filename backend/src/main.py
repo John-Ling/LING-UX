@@ -13,13 +13,22 @@ from logger import logger
 sessions: defaultdict[str, set[Session]] = defaultdict(set)
 
 sio = socketio.AsyncServer(
-    cors_allowed_origins=["http://localhost:5173"], async_mode="asgi"
+    cors_allowed_origins=[
+        "http://localhost:5173",
+        "https://terminal.johnling.me",
+        "http://127.0.0.1",
+    ],
+    async_mode="asgi",
 )
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://terminal.johnling.me",
+        "http://127.0.0.1",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -12,7 +12,9 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
+ARG VITE_API_BASE_URL
 ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend .
