@@ -149,7 +149,6 @@ KeyValue* ht_get_int(HashTable* table, int key)
 
 	if (table->buckets[index] == NULL)
 	{
-		puts("Could not find");
 		return NULL;
 	}
 
@@ -164,7 +163,6 @@ KeyValue* ht_get_chr(HashTable* table, char key)
 
 	if (table->buckets[index] == NULL)
 	{
-		puts("Could not find");
 		return NULL;
 	}
 
@@ -334,41 +332,40 @@ int ht_free(HashTable* table, void free_item(void*))
 // whilst allowing the use of a user defined free function
 static int _ht_free_bucket(LinkedList* list, void free_item(void*))
 {
-	if ((list)->head == NULL)
-	{
-		free(list);
-		list = NULL;
-		return EXIT_SUCCESS;
-	}
+	if (list->head == NULL)
+    {
+        free(list);
+        return EXIT_SUCCESS;
+    }
 
-	ListNode* previous = list->head;
-	KeyValue* pair = (KeyValue*)previous->value;
+    ListNode* previous = list->head;
+    list->head = list->head->next;
 
-	list->head = list->head->next;
-	while (list->head != NULL)
-	{
-		_ht_delete_pair(pair, free_item);
-		// free key value pair
-		free(previous);
-		previous = list->head;
+    while (previous != NULL)
+    {
+        KeyValue* pair = (KeyValue*)previous->value;
 
-		pair = (KeyValue* )list->head->value;
-		list->head = list->head->next;
-	}
+        if (free_item != NULL)
+        {
+            free(pair->key);
+            pair->key = NULL;
+            free_item(pair->data);
+            pair->data = NULL;
+        }
 
-	// free final just keep this the same idk why it break when changed
-	free(pair->key);
-	pair->key = NULL;
-	free_item(pair->data);
-	pair->data = NULL;
+        free(previous->value);
+        previous->value = NULL;
+        free(previous);
 
-	free_item(previous->value);
-	previous->value = NULL;
-	free(previous);
-	previous = NULL;
-	free(list);
-	list = NULL;
-	return EXIT_SUCCESS;
+        previous = list->head;
+        if (list->head != NULL)
+        {
+            list->head = list->head->next;
+        }
+    }
+
+    free(list);
+    return EXIT_SUCCESS;
 }
 
 int ht_print_keys(HashTable* table, void print(const void*))
@@ -460,8 +457,6 @@ static int _resize(HashTable* table)
 		while (current != NULL)
 		{
 			KeyValue* pair = (KeyValue*)(current->value);
-			KeyValue* insertPair = _ht_create_pair(pair->key, pair->data, 
-											table->keySize, table->dataSize);
 			unsigned int insertBucket = 0;
 			switch (table->type)
 			{
@@ -478,16 +473,15 @@ static int _resize(HashTable* table)
 					return EXIT_FAILURE;
 			}
 
-			LibLinkedList.insert(resized[insertBucket], (void*)insertPair, -1);
-			free(insertPair);
-			
+			LibLinkedList.insert(resized[insertBucket], (void*)pair, -1);
 			current = current->next;
 		}
 	}
 
+	// Free original buckets
 	for (int i = 0; i < table->bucketCount; i++)
 	{
-		_ht_free_bucket(table->buckets[i], table->free);
+		_ht_free_bucket(table->buckets[i], NULL);
 	}
 
 	free(table->buckets);
