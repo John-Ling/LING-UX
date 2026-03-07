@@ -44,12 +44,6 @@ def move_shared_objects_and_headers(container: Container):
 
     copy_to_container(
         container,
-        f"{base_path}/shared/lib/*",
-        "/home/guest/markov-chain-text-generator/lib",
-    )
-
-    copy_to_container(
-        container,
         f"{base_path}/shared/include/*",
         "/home/guest/data-structures-and-algorithms/algorithms/include",
     )
@@ -58,12 +52,6 @@ def move_shared_objects_and_headers(container: Container):
         container,
         f"{base_path}/shared/include/*",
         "/home/guest/data-structures-and-algorithms/data-structures/include",
-    )
-
-    copy_to_container(
-        container,
-        f"{base_path}/shared/include/*",
-        "/home/guest/markov-chain-text-generator/include",
     )
 
 

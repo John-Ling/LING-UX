@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "linked_lists.h"
 #include "./utils.h"
@@ -26,11 +27,13 @@ typedef struct HashTable_t
 	// string
 	// char
 	// int float double
-	int bucketCount;
-	LinkedList** buckets; // static sized array of linked lists
+	LinkedList** buckets;
+	int storedKeyCount;
+	size_t bucketCount;
 	HashType type; // specifies the data type used for a key
 	size_t keySize;
 	size_t dataSize;
+	void (*free)(void*); // user provided free function when storing complex data like structs
 } HashTable;
 
 // key value pair
@@ -41,7 +44,7 @@ typedef struct KeyValue_t
 } KeyValue;
 
 
-HashTable* ht_create(HashType keyType, int bucketCount, size_t dataSize);
+HashTable* ht_create(HashType keyType, int bucketCount, size_t dataSize, void free_function(void*));
 int ht_insert_str(HashTable* table, const char* key, const void* value);
 int ht_insert_chr(HashTable* table, char key, const void* value);
 int ht_insert_int(HashTable* table, int key, const void* value);
@@ -63,7 +66,7 @@ void ht_free_key_value_pair(void* pair);
 
 struct LibHashTable_l {
 	// create a hash table
-    HashTable* (*create)(HashType keyType, const int bucketCount, const size_t dataSize);
+    HashTable* (*create)(HashType keyType, const int bucketCount, const size_t dataSize, void free_function(void*));
 
 	// move through buckets in hash table and goes through each linked list of 
 	// key value pairs
