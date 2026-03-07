@@ -13,7 +13,7 @@ export const useSocketConnection = (
 
   // Establish websocket connection
   useEffect(() => {
-    console.log("[LOG] connecting to session");
+    console.log(`[LOG] connecting to session at ${import.meta.env.VITE_API_BASE_URL}`);
 
     const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
     if (!socket) {

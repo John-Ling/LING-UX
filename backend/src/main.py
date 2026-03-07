@@ -23,7 +23,7 @@ sio = socketio.AsyncServer(
     async_mode="asgi",
 )
 
-app = FastAPI(root_path="/api")
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -32,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-socket_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="/api/socket.io")
+socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 docker_client = docker.from_env()
 sockets.register_handlers(sio, sessions, docker_client)
 
