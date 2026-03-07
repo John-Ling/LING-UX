@@ -1,6 +1,5 @@
 services:
   backend:
-    env_file: "./env/.env.production"
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
