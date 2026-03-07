@@ -9,7 +9,7 @@ services:
       - PYTHONUNBUFFERED=1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`terminal.johnling.me`)"
+      - "traefik.http.routers.backend.rule=Host(`terminal.johnling.me:8000`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
