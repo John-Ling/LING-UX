@@ -60,7 +60,7 @@ class Session:
         self.id = id
         self.last_updated = time.time()
         self.container: Container = docker_client.containers.run(
-            "web-shell-user-container:latest",
+            "lingux-session-container:latest",
             command=["/bin/bash", "--rcfile", "/etc/bash.bashrc"],
             working_dir="/home/guest",
             name=f"session_{id}",
