@@ -15,9 +15,7 @@ export const useSocketConnection = (
   useEffect(() => {
     console.log("[LOG] connecting to session");
 
-    const socket = io(`${import.meta.env.VITE_API_BASE_URL}`, {
-      path: "/api/socket.io"
-    });
+    const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
     if (!socket) {
       return;
     }
