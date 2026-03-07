@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 // markov model represented using a hash table
 HashTable* create_markov_model(char* filename, int order)
 {
-    HashTable* model = LibHashTable.create(STRING, 100, sizeof(MarkovState));
+    HashTable* model = LibHashTable.create(STRING, 100, sizeof(MarkovState), _free_markov_state);
     size_t tokenCount = 0;
     char** tokens = _generate_tokens(filename, &tokenCount);
     _generate_ngrams(model, (const char**)tokens, tokenCount, order);
@@ -157,7 +157,7 @@ int _generate_ngrams(HashTable* model, const char** tokens, size_t tokenCount, i
             }
         }   
     }
-    // normalise probabilities 
+
     _normalise_probabilities(model);
     LibHashTable.print_keys(model, _print_markov_state);
     return ngramCount;
