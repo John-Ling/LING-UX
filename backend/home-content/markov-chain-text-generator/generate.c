@@ -7,6 +7,11 @@ int main(int argc, char* argv[])
     int isAscii = atoi(argv[2]);
     int truncate = atoi(argv[3]);
     int wordCount = atoi(argv[4]); // length to generate in words
+    
+    if (argc != 4) {
+        puts("Run as ./bin/generate ")
+    }
+
     char* src = argv[5];
 
     printf("Creating Markov Model of order %d\n", order);
