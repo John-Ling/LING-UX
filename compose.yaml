@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: docker/frontend/Dockerfile
       args:
-        - VITE_API_BASE_URL=https://terminal.johnling.me
+        - VITE_API_BASE_URL=https://terminal.johnling.me:8000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`terminal.johnling.me`)"
