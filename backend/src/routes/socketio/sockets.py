@@ -16,7 +16,6 @@ def register_handlers(
     sessions: defaultdict[str, set[Session]],
     docker_client: DockerClient,
 ):
-    sio.start_background_task(read_and_send_to_client)
 
     @sio.on("create_session")
     async def session(sid):
@@ -141,3 +140,6 @@ def register_handlers(
             await loop.run_in_executor(executor=_executor, func=lambda: session.close())
             del sessions[sid]
             logger.info(f"Closing completed")
+
+    # main IO process
+    sio.start_background_task(read_and_send_to_client)
