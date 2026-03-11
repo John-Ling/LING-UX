@@ -76,4 +76,6 @@ class Session:
             self.container.stop(timeout=5)
         except Exception:
             self.container.kill()
-        self.container.remove()
+        finally:
+            self.container.remove()
+      
