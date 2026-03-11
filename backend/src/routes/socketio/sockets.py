@@ -1,13 +1,15 @@
 from socketio import AsyncServer
 from collections import defaultdict
 from docker import DockerClient
+from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import select
 import time
 
 from logger import logger
 from models.session import Session
-import re
+
+_executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="lingux-session")
 
 def register_handlers(
     sio: AsyncServer,
@@ -22,9 +24,8 @@ def register_handlers(
         session = Session(sid, docker_client)
         sessions[sid].add(session)
         await sio.emit("session_created", sid, room=sid)
-        await asyncio.sleep(0.15)
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, lambda: session.raw_socket.sendall(b"\n"))
+        logger.info("Starting read write loop")
+        sio.start_background_task(read_and_send_to_client) 
 
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
@@ -63,7 +64,7 @@ def register_handlers(
     async def write_to_socket(session: Session, data: bytes):
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
-            executor=None, func=lambda: session.raw_socket.sendall(data)
+            executor=_executor, func=lambda: session.raw_socket.sendall(data)
         )
 
     def resize_session(session: Session, row_count: int, column_count: int):
@@ -94,7 +95,7 @@ def register_handlers(
                     continue
 
                 (readable, _, _) = await loop.run_in_executor(
-                    executor=None, func=lambda: select.select(sockets, [], [], 0.05)
+                    executor=_executor, func=lambda: select.select(sockets, [], [], 0.05)
                 )
 
                 if readable:
@@ -107,7 +108,7 @@ def register_handlers(
                             continue
 
                         output = await loop.run_in_executor(
-                            executor=None, func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore")
+                            executor=_executor, func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore")
                         )
                         if not output:
                             await sio.emit("session_ended", {}, to=session.id)
@@ -120,7 +121,7 @@ def register_handlers(
                 await asyncio.sleep(0.01)
 
             except Exception as e:
-                # ✅ Log but never let the task die
+                # Log but never let the task die
                 logger.exception(f"read_and_send_to_client loop error: {e}")
                 await asyncio.sleep(0.1)  # brief pause before retrying
 
@@ -130,11 +131,6 @@ def register_handlers(
         logger.info(f"Closing session {sid}")
         session = get_session(sid)
         if session:
-            await loop.run_in_executor(executor=None, func=lambda: session.close())
+            await loop.run_in_executor(executor=_executor, func=lambda: session.close())
             del sessions[sid]
             logger.info(f"Closing completed")
-    
-    logger.info("Starting read write loop")
-    sio.start_background_task(read_and_send_to_client)       
-    
-    
