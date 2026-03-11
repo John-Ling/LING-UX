@@ -11,14 +11,10 @@ import os
 # load_dotenv("../../../env/.env.development")
 
 def copy_to_container(container, src_pattern: str, dest_path: str):
-    src_dir = os.path.dirname(src_pattern.rstrip("/*"))  # e.g. /home/ubuntu/LING-UX/home-content
-    print(f"Glob results: {glob.glob(src_pattern, recursive=True)}")
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w") as tar:
         for path in glob.glob(src_pattern, recursive=True):
-            # Preserve relative structure from src_dir
-            arcname = os.path.relpath(path, src_dir)
-            tar.add(path, arcname=arcname, recursive=True)
+            tar.add(path, arcname=os.path.basename(path))
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
@@ -37,7 +33,7 @@ def move_shared_objects_and_headers(container: Container):
     ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/data-structures/include")
 
     # Now copy
-    copy_to_container(container, f"{base_path}/*", "/home/guest")
+    copy_to_container(container, f"{base_path}/home-content/*", "/home/guest")
     copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/algorithms/lib")
     copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/data-structures/lib")
     copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/algorithms/include")
