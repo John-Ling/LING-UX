@@ -8,8 +8,8 @@ import tarfile
 import io
 import os
 
-load_dotenv("../../../env/.env.development")
-
+# Disable for prod
+# load_dotenv("../../../env/.env.development")
 
 def copy_to_container(container, src_pattern: str, dest_path: str):
     buf = io.BytesIO()
@@ -23,6 +23,7 @@ def copy_to_container(container, src_pattern: str, dest_path: str):
 def move_shared_objects_and_headers(container: Container):
     # Move shared objects and headers to parts of the home that need them
     base_path = os.environ.get("HOME_CONTENT_PATH", os.getcwd())
+    print(f"loading from path {base_path}")
 
     copy_to_container(
         container,
