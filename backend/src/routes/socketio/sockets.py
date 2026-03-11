@@ -87,8 +87,11 @@ def register_handlers(
                 ),
                 None,
             )
+    
+
 
         while True:
+            dead_sessions: list[Session] = []
             _sessions = [get_session(sid) for sid in sessions.keys()]
             _sessions = [session for session in _sessions if session is not None]
 
@@ -108,14 +111,18 @@ def register_handlers(
                     session = get_session_by_socket(socket)
                     if session is None:
                         logger.error("Could not find session by socket")
+                        dead_sessions.append(session)
                         continue
 
                     output = await loop.run_in_executor(
                         executor=None,
-                        func=lambda: socket.recv(READ_SIZE).decode(errors="ignore"),
+                        func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore"),
                     )
                     if not output:
                         logger.info(f"Session {session.id} container exited")
+                        await sio.emit("terminal-receive", {"output": "ERROR"}, to=session.id)
+                        dead_sessions.append(session)
+                        continue
 
                     logger.info(f"Sending to session {session.id}")
                     await sio.emit("terminal-receive", {"output": output}, to=session.id)
@@ -124,6 +131,8 @@ def register_handlers(
                     logger.exception(f"Failure: {err}")
 
             await asyncio.sleep(0.05)  # Yield to event loop
+            for session in dead_sessions:
+                await loop.run_in_executor(executor=None, func=lambda: session.close())
 
 
     @sio.on("disconnect")
