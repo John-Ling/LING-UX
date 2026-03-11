@@ -2,6 +2,7 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from collections import defaultdict
+import asyncio
 import uvicorn
 import docker
 
@@ -43,6 +44,30 @@ async def get_sessions():
 
     return {"sessions": list(sessions.keys())}
 
+@app.get("/debug/ping/{sid}")
+async def debug_ping(sid: str):
+    session_set = sessions.get(sid)
+    if not session_set:
+        return {"error": "no session"}
+    
+    session = next(iter(session_set))
+    loop = asyncio.get_running_loop()
+    
+    # Check socket is alive
+    fd = session.raw_socket.fileno()
+    
+    # Write directly
+    await loop.run_in_executor(None, lambda: session.raw_socket.sendall(b"echo ping123\n"))
+    await asyncio.sleep(0.3)
+    
+    # Read directly, bypassing select
+    try:
+        data = await loop.run_in_executor(None, lambda: session.raw_socket.recv(4096))
+        return {"fd": fd, "response": data.decode(errors="ignore"), "bytes": len(data)}
+    except BlockingIOError:
+        return {"fd": fd, "response": "no data available (BlockingIOError)"}
+    except Exception as e:
+        return {"fd": fd, "error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run(socket_app, host="0.0.0.0", port=8000)

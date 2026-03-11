@@ -64,12 +64,22 @@ class Session:
             },
         )
 
+        # Wait for docker container to start
+        for _ in range(10):
+            self.container.reload()
+            if self.container.status == "running":
+                break
+            time.sleep(0.1)
+        else:
+            raise RuntimeError("Container failed to start")
+
         move_shared_objects_and_headers(self.container)
 
         self.socket: Any = self.container.attach_socket(
             params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
         )
         self.raw_socket: Any = self.socket._sock
+        self.raw_socket.setblocking(False)
 
     def close(self):
         try:

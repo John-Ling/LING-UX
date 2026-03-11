@@ -9,13 +9,12 @@ import time
 from logger import logger
 from models.session import Session
 
-_executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="socket-io")
-
 def register_handlers(
     sio: AsyncServer,
     sessions: defaultdict[str, set[Session]],
     docker_client: DockerClient,
 ):
+    _executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="socket-io")
 
     @sio.on("create_session")
     async def session(sid):
@@ -24,7 +23,7 @@ def register_handlers(
 
         session = Session(sid, docker_client)
         sessions[sid].add(session)
-        logger.info("Starting read write loop")
+        await asyncio.sleep(0.1)
         await sio.emit("session_created", sid, room=sid)
 
     @sio.on("send-to-terminal")
@@ -141,5 +140,6 @@ def register_handlers(
             del sessions[sid]
             logger.info(f"Closing completed")
 
+    logger.info("Starting main IO loop")
     # main IO process
     sio.start_background_task(read_and_send_to_client)
