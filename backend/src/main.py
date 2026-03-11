@@ -23,7 +23,7 @@ sio = socketio.AsyncServer(
     async_mode="asgi",
 )
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
