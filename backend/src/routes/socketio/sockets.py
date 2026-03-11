@@ -25,7 +25,7 @@ def register_handlers(
         sessions[sid].add(session)
         await sio.emit("session_created", sid, room=sid)
         logger.info("Starting read write loop")
-        sio.start_background_task(read_session) 
+        sio.start_background_task(read_session(session)) 
 
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
