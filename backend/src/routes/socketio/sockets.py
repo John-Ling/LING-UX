@@ -21,8 +21,7 @@ def register_handlers(
 
         session = Session(sid, docker_client)
         sessions[sid].add(session)
-        logger.info("Starting read write loop")
-        sio.start_background_task(read_and_send_to_client)
+        
 
         await sio.emit("session_created", sid, room=sid)
 
@@ -144,3 +143,6 @@ def register_handlers(
             await loop.run_in_executor(executor=None, func=lambda: session.close())
             del sessions[sid]
             logger.info(f"Closing completed")
+    
+    logger.info("Starting read write loop")
+    sio.start_background_task(read_and_send_to_client)
