@@ -1,3 +1,4 @@
+import io
 from typing import Any
 from docker import DockerClient
 from docker.models.containers import Container
@@ -12,6 +13,7 @@ import os
 def copy_to_container(container, src_pattern: str, dest_path: str):
     src_dir = os.path.dirname(src_pattern.rstrip("/*"))  # e.g. /home/ubuntu/LING-UX/home-content
     print(f"Glob results: {glob.glob(src_pattern, recursive=True)}")
+    buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w") as tar:
         for path in glob.glob(src_pattern, recursive=True):
             # Preserve relative structure from src_dir
