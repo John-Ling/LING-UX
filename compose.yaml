@@ -7,6 +7,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - PYTHONUNBUFFERED=1
+      - HOME_CONTENT_PATH=/home-content
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`terminal.johnling.me`) && PathPrefix(`/api`)"
@@ -15,6 +16,8 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
     networks:
       - dokploy-network
+    volumes:
+      - /home/ubuntu/LING-UX:/home-content
 
   frontend:
     build:
