@@ -5,6 +5,7 @@ services:
       dockerfile: docker/backend/Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ubuntu/LING-UX:/home-content
     environment:
       - PYTHONUNBUFFERED=1
       - HOME_CONTENT_PATH=/home-content
@@ -16,8 +17,6 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
     networks:
       - dokploy-network
-    volumes:
-      - /home/ubuntu/LING-UX:/home-content
 
   frontend:
     build:
