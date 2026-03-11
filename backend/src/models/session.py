@@ -80,7 +80,7 @@ class Session:
             },
         )
 
-        # move_shared_objects_and_headers(self.container)
+        move_shared_objects_and_headers(self.container)
 
         self.socket: Any = self.container.attach_socket(
             params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
