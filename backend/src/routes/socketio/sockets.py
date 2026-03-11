@@ -1,5 +1,4 @@
 from socketio import AsyncServer
-from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
 from docker import DockerClient
 import asyncio
@@ -8,14 +7,13 @@ import time
 
 from logger import logger
 from models.session import Session
+import re
 
 def register_handlers(
     sio: AsyncServer,
     sessions: defaultdict[str, set[Session]],
     docker_client: DockerClient,
 ):
-    _executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="socket-io")
-
     @sio.on("create_session")
     async def session(sid):
         logger.info("Received websocket connection")
@@ -23,7 +21,9 @@ def register_handlers(
 
         session = Session(sid, docker_client)
         sessions[sid].add(session)
-        await asyncio.sleep(0.1)
+        logger.info("Starting read write loop")
+        sio.start_background_task(read_and_send_to_client)
+
         await sio.emit("session_created", sid, room=sid)
 
     @sio.on("send-to-terminal")
@@ -63,7 +63,7 @@ def register_handlers(
     async def write_to_socket(session: Session, data: bytes):
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
-            executor=_executor, func=lambda: session.raw_socket.sendall(data)
+            executor=None, func=lambda: session.raw_socket.sendall(data)
         )
 
     def resize_session(session: Session, row_count: int, column_count: int):
@@ -89,9 +89,7 @@ def register_handlers(
             )
 
         while True:
-            # Take copy if current session ids to prevent mutation to original dict
-            session_ids = list(sessions.keys())
-            _sessions = [get_session(sid) for sid in session_ids]
+            _sessions = [get_session(sid) for sid in sessions.keys()]
             _sessions = [session for session in _sessions if session is not None]
 
             sockets = [session.raw_socket for session in _sessions]
@@ -101,7 +99,7 @@ def register_handlers(
             # wlist = [] nothing to write
             # xlist = [] nothing to monitor for "exceptional conditions"
             (available_for_read, _, _) = await loop.run_in_executor(
-                executor=_executor, func=lambda: select.select(sockets, [], [], 0.05)
+                executor=None, func=lambda: select.select(sockets, [], [], 0.1)
             )
 
             for socket in available_for_read:
@@ -113,13 +111,11 @@ def register_handlers(
                         continue
 
                     output = await loop.run_in_executor(
-                        executor=_executor,
-                        func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore"),
+                        executor=None,
+                        func=lambda: socket.recv(READ_SIZE).decode(errors="ignore"),
                     )
                     if not output:
                         logger.info(f"Session {session.id} container exited")
-                        await sio.emit("terminal-receive", {"output": "Kernel Panic! Reload this tab"})
-                        continue
 
                     logger.info(f"Sending to session {session.id}")
                     await sio.emit("terminal-receive", {"output": output}, to=session.id)
@@ -136,10 +132,6 @@ def register_handlers(
         logger.info(f"Closing session {sid}")
         session = get_session(sid)
         if session:
-            await loop.run_in_executor(executor=_executor, func=lambda: session.close())
+            await loop.run_in_executor(executor=None, func=lambda: session.close())
             del sessions[sid]
             logger.info(f"Closing completed")
-
-    logger.info("Starting main IO loop")
-    # main IO process
-    sio.start_background_task(read_and_send_to_client)
