@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     int wordCount = atoi(argv[4]); // length to generate in words
     
     if (argc != 4) {
-        puts("Run as ./bin/generate ")
+        puts("Run as ./bin/generate ");
     }
 
     char* src = argv[5];

@@ -3,19 +3,20 @@ from docker import DockerClient
 from docker.models.containers import Container
 import time
 import glob
-from dotenv import load_dotenv
 import tarfile
-import io
 import os
 
 # Disable for prod
 # load_dotenv("../../../env/.env.development")
 
 def copy_to_container(container, src_pattern: str, dest_path: str):
-    buf = io.BytesIO()
+    src_dir = os.path.dirname(src_pattern.rstrip("/*"))  # e.g. /home/ubuntu/LING-UX/home-content
+    print(f"Glob results: {glob.glob(src_pattern, recursive=True)}")
     with tarfile.open(fileobj=buf, mode="w") as tar:
         for path in glob.glob(src_pattern, recursive=True):
-            tar.add(path, arcname=os.path.basename(path))
+            # Preserve relative structure from src_dir
+            arcname = os.path.relpath(path, src_dir)
+            tar.add(path, arcname=arcname, recursive=True)
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
