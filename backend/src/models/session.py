@@ -95,7 +95,6 @@ class Session:
         )
 
         self.raw_socket: Any = sock._sock
-        self.raw_socket.setblocking(False)
 
     def close(self):
         try:
