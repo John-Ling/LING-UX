@@ -25,7 +25,7 @@ def register_handlers(
         sessions[sid].add(session)
         await sio.emit("session_created", sid, room=sid)
         logger.info("Starting read write loop")
-        sio.start_background_task(read_and_send_to_client) 
+        sio.start_background_task(read_session) 
 
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
@@ -70,60 +70,44 @@ def register_handlers(
     def resize_session(session: Session, row_count: int, column_count: int):
         session.container.resize(height=row_count, width=column_count)
 
-    async def read_and_send_to_client():
+    async def read_session(session: Session):
         """
-        Read data from all sessions and send it through their correct sockets
+        IO loop for session. Read data from socket socket and write via websocket
         """
-        loop = asyncio.get_running_loop()
         READ_SIZE = 4096
+        loop = asyncio.get_running_loop()
+        logger.info(f"Starting reader for session {session.id}")
 
-        def get_session_by_socket(socket) -> Session | None:
-            return next(
-                (s for s in _sessions if s is not None and s.raw_socket is socket),
-                None,
-            )
+        try:
+            fd = session.raw_socket.fileno()
+            logger.info(f"Session {session.id} socket fd={fd}")
+        except Exception as e:
+            logger.error(f"Session {session.id} has no valid fd: {e}")
+            return
 
         while True:
             try:
-                current_sids = list(sessions.keys())
-                _sessions = [get_session(sid) for sid in current_sids]
-                _sessions = [s for s in _sessions if s is not None]
-                sockets = [s.raw_socket for s in _sessions]
-
-                if not sockets:
-                    await asyncio.sleep(0.1)
-                    continue
-
-                (readable, _, _) = await loop.run_in_executor(
-                    executor=_executor, func=lambda: select.select(sockets, [], [], 0.05)
+                output = await loop.run_in_executor(
+                    _executor,
+                    lambda: session.raw_socket.recv(READ_SIZE)
                 )
+                
+                if not output:
+                    logger.info(f"Session {session.id} socket closed")
+                    break
 
-                if readable:
-                    logger.info(f"select returned {len(readable)} readable sockets")
+                decoded = output.decode(errors="ignore")
+                logger.info(f"Session {session.id} recv {len(output)} bytes: {repr(decoded[:50])}")
+                await sio.emit("terminal-receive", {"output": decoded}, to=session.id)
 
-                for socket in readable:
-                    try:
-                        session = get_session_by_socket(socket)
-                        if session is None:
-                            continue
-
-                        output = await loop.run_in_executor(
-                            executor=_executor, func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore")
-                        )
-                        if not output:
-                            await sio.emit("session_ended", {}, to=session.id)
-                            continue
-
-                        await sio.emit("terminal-receive", {"output": output}, to=session.id)
-                    except OSError as err:
-                        logger.exception(f"Socket read failure: {err}")
-
-                await asyncio.sleep(0.01)
-
+            except OSError as e:
+                logger.exception(f"Session {session.id} read error: {e}")
+                break
             except Exception as e:
-                # Log but never let the task die
-                logger.exception(f"read_and_send_to_client loop error: {e}")
-                await asyncio.sleep(0.1)  # brief pause before retrying
+                logger.exception(f"Session {session.id} unexpected error: {e}")
+                break
+
+        logger.info(f"Reader for session {session.id} exiting")
 
     @sio.on("disconnect")
     async def disconnect(sid):

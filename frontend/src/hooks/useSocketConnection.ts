@@ -15,8 +15,6 @@ export const useSocketConnection = (
 	useEffect(() => {
 		console.log(`[LOG] connecting to session at ${import.meta.env.VITE_API_BASE_URL}`);
 
-		// Socket.IO appends the path to the URL, so we need the base domain
-		// VITE_API_BASE_URL is "https://terminal.johnling.me/api" but Socket.IO needs just the domain
 		const socket = io(import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, ""), {
 			path: "/api/socket.io"
 		});
