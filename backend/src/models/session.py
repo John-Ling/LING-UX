@@ -22,42 +22,26 @@ def copy_to_container(container, src_pattern: str, dest_path: str):
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
+def ensure_dir_exists(container, path: str):
+    container.exec_run(f"mkdir -p {path}")
 
 def move_shared_objects_and_headers(container: Container):
-    # Move shared objects and headers to parts of the home that need them
     base_path = os.environ.get("HOME_CONTENT_PATH", os.getcwd())
     print(f"loading from path {base_path}")
 
-    copy_to_container(
-        container,
-        f"{base_path}/home-content/*",
-        "/home/guest",
-    )
+    # Create all destination directories first
+    ensure_dir_exists(container, "/home/guest")
+    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/algorithms/lib")
+    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/algorithms/include")
+    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/data-structures/lib")
+    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/data-structures/include")
 
-    copy_to_container(
-        container,
-        f"{base_path}/shared/lib/*",
-        "/home/guest/data-structures-and-algorithms/algorithms/lib",
-    )
-
-    copy_to_container(
-        container,
-        f"{base_path}/shared/lib/*",
-        "/home/guest/data-structures-and-algorithms/data-structures/lib",
-    )
-
-    copy_to_container(
-        container,
-        f"{base_path}/shared/include/*",
-        "/home/guest/data-structures-and-algorithms/algorithms/include",
-    )
-
-    copy_to_container(
-        container,
-        f"{base_path}/shared/include/*",
-        "/home/guest/data-structures-and-algorithms/data-structures/include",
-    )
-
+    # Now copy
+    copy_to_container(container, f"{base_path}/home-content/*", "/home/guest")
+    copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/algorithms/lib")
+    copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/data-structures/lib")
+    copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/algorithms/include")
+    copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/data-structures/include")
 
 class Session:
     def __init__(self, id: int, docker_client: DockerClient):

@@ -19,11 +19,11 @@ const sounds = {
 export const useSound = (soundKey: SoundKey) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const volumes = {
-    idle: 0.2,
-    beep: 0.2,
-    spinup: 0.2,
-    hdd_click: 0.4,
-    startup_click: 0.2,
+    idle: 0.4,
+    beep: 0.4,
+    spinup: 0.4,
+    hdd_click: 0.8,
+    startup_click: 0.4,
   };
 
   const getAudio = useCallback(() => {
