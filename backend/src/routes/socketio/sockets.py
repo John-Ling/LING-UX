@@ -22,6 +22,9 @@ def register_handlers(
         session = Session(sid, docker_client)
         sessions[sid].add(session)
         await sio.emit("session_created", sid, room=sid)
+        await asyncio.sleep(0.15)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: session.raw_socket.sendall(b"\n"))
 
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
@@ -93,6 +96,9 @@ def register_handlers(
                 (readable, _, _) = await loop.run_in_executor(
                     executor=None, func=lambda: select.select(sockets, [], [], 0.05)
                 )
+
+                if readable:
+                    logger.info(f"select returned {len(readable)} readable sockets")
 
                 for socket in readable:
                     try:

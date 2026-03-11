@@ -75,10 +75,26 @@ class Session:
 
         move_shared_objects_and_headers(self.container)
 
-        self.socket: Any = self.container.attach_socket(
-            params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
+        exec_id = docker_client.api.exec_create(
+            self.container.id,
+            cmd=["/bin/bash", "--rcfile", "/etc/bash.bashrc"],
+            stdin=True,
+            stdout=True,
+            stderr=True,
+            tty=True,
+            workdir="/home/guest",
+            environment={"PS1": r"guest@workstation \w $ "},
+            user="1000:1000",
         )
-        self.raw_socket: Any = self.socket._sock
+
+        sock = docker_client.api.exec_start(
+            exec_id["Id"],
+            tty=True,
+            socket=True,
+            demux=False,
+        )
+
+        self.raw_socket: Any = sock._sock
         self.raw_socket.setblocking(False)
 
     def close(self):
