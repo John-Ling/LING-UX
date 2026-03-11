@@ -21,8 +21,6 @@ def register_handlers(
 
         session = Session(sid, docker_client)
         sessions[sid].add(session)
-        
-
         await sio.emit("session_created", sid, room=sid)
 
     @sio.on("send-to-terminal")
@@ -72,67 +70,53 @@ def register_handlers(
         """
         Read data from all sessions and send it through their correct sockets
         """
-
         loop = asyncio.get_running_loop()
-
-        READ_SIZE = 4096  # typical size of a pty buffer
+        READ_SIZE = 4096
 
         def get_session_by_socket(socket) -> Session | None:
             return next(
-                (
-                    session
-                    for session in _sessions
-                    if session is not None and session.raw_socket is socket
-                ),
+                (s for s in _sessions if s is not None and s.raw_socket is socket),
                 None,
             )
-    
-
 
         while True:
-            dead_sessions: list[Session] = []
-            _sessions = [get_session(sid) for sid in sessions.keys()]
-            _sessions = [session for session in _sessions if session is not None]
+            try:
+                current_sids = list(sessions.keys())
+                _sessions = [get_session(sid) for sid in current_sids]
+                _sessions = [s for s in _sessions if s is not None]
+                sockets = [s.raw_socket for s in _sessions]
 
-            sockets = [session.raw_socket for session in _sessions]
+                if not sockets:
+                    await asyncio.sleep(0.1)
+                    continue
 
-            # Check if any sockets are available to be read via select call
-            # rlist = [sockets] monitor all sessions for reading
-            # wlist = [] nothing to write
-            # xlist = [] nothing to monitor for "exceptional conditions"
-            (available_for_read, _, _) = await loop.run_in_executor(
-                executor=None, func=lambda: select.select(sockets, [], [], 0.1)
-            )
+                (readable, _, _) = await loop.run_in_executor(
+                    executor=None, func=lambda: select.select(sockets, [], [], 0.05)
+                )
 
-            for socket in available_for_read:
-                logger.info(f"Reading data from socket")
-                try:
-                    session = get_session_by_socket(socket)
-                    if session is None:
-                        logger.error("Could not find session by socket")
-                        dead_sessions.append(session)
-                        continue
+                for socket in readable:
+                    try:
+                        session = get_session_by_socket(socket)
+                        if session is None:
+                            continue
 
-                    output = await loop.run_in_executor(
-                        executor=None,
-                        func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore"),
-                    )
-                    if not output:
-                        logger.info(f"Session {session.id} container exited")
-                        await sio.emit("terminal-receive", {"output": "ERROR"}, to=session.id)
-                        dead_sessions.append(session)
-                        continue
+                        output = await loop.run_in_executor(
+                            executor=None, func=lambda s=socket: s.recv(READ_SIZE).decode(errors="ignore")
+                        )
+                        if not output:
+                            await sio.emit("session_ended", {}, to=session.id)
+                            continue
 
-                    logger.info(f"Sending to session {session.id}")
-                    await sio.emit("terminal-receive", {"output": output}, to=session.id)
-                except OSError as err:
-                    # Ignore OS reading errors to keep the sessions going
-                    logger.exception(f"Failure: {err}")
+                        await sio.emit("terminal-receive", {"output": output}, to=session.id)
+                    except OSError as err:
+                        logger.exception(f"Socket read failure: {err}")
 
-            await asyncio.sleep(0.05)  # Yield to event loop
-            for session in dead_sessions:
-                await loop.run_in_executor(executor=None, func=lambda: session.close())
+                await asyncio.sleep(0.01)
 
+            except Exception as e:
+                # ✅ Log but never let the task die
+                logger.exception(f"read_and_send_to_client loop error: {e}")
+                await asyncio.sleep(0.1)  # brief pause before retrying
 
     @sio.on("disconnect")
     async def disconnect(sid):
@@ -145,4 +129,6 @@ def register_handlers(
             logger.info(f"Closing completed")
     
     logger.info("Starting read write loop")
-    sio.start_background_task(read_and_send_to_client)
+    sio.start_background_task(read_and_send_to_client)       
+    
+    
