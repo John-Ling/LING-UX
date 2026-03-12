@@ -165,6 +165,8 @@ function App() {
     const fitAddon = fitAddonRef.current;
     if (fitAddon && socket && terminal) {
       fitAddon.fit();
+      console.log("Resizing");
+      console.log(terminal.rows, terminal.cols)
       // Resize terminal on backend
       socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols })
     }
@@ -225,16 +227,17 @@ function App() {
     terminal.open(terminalRef.current);
     fitAddon.fit();
 
+    const socket = socketRef.current;
+    if (socket) {
+      console.log("Sizing window to initial client size")
+      console.log(terminal.rows, terminal.cols)
+      socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
+    }
+
     xtermRef.current = terminal;
     fitAddonRef.current = fitAddon;
 
     splashScreen();
-
-    const socket = socketRef.current;
-    if (socket) {
-      console.log("Sizing window to initial client size")
-      socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
-    }
 
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;
