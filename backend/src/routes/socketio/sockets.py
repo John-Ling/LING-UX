@@ -3,7 +3,6 @@ from collections import defaultdict
 from docker import DockerClient
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
-import select
 import time
 
 from logger import logger

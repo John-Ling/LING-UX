@@ -20,8 +20,7 @@ RUN echo "alias about='cat README'" >> /etc/bash.bashrc
 RUN echo "en_GB.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen en_GB.UTF-8
 
-RUN useradd -m -u 1000 -g 1000 guest
-RUN chown -R guest:guest /home
+RUN useradd -m guest
 
 ENV LANG=en_GB.UTF-8
 ENV LANGUAGE=en_GB:en

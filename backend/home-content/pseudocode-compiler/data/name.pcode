@@ -1,4 +1,0 @@
-DECLARE Name : STRING
-OUTPUT "What is your name"
-INPUT Name
-OUTPUT "Hello", Name

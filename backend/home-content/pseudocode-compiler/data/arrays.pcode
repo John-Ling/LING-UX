@@ -1,3 +1,0 @@
-DECLARE Arr : ARRAY[1:5, 1:5] OF INTEGER
-Arr[0][0] <-- 5
-OUTPUT Arr[0][0]
