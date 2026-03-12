@@ -10,21 +10,11 @@ import os
 # Disable for prod
 # load_dotenv("../../../env/.env.development")
 
-def copy_to_container(container, src_pattern: str, dest_path: str, owner: str = "guest"):
+def copy_to_container(container, src_pattern: str, dest_path: str):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w") as tar:
         for path in glob.glob(src_pattern, recursive=True):
-            tarinfo = tar.gettarinfo(path, arcname=os.path.basename(path))
-            tarinfo.uid = 0
-            tarinfo.gid = 0
-            tarinfo.uname = owner
-            tarinfo.gname = owner
-            tarinfo.mode = 0o644 if os.path.isfile(path) else 0o755
-            if os.path.isfile(path):
-                with open(path, "rb") as f:
-                    tar.addfile(tarinfo, f)
-            else:
-                tar.addfile(tarinfo)
+            tar.add(path, arcname=os.path.basename(path))
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
@@ -49,7 +39,10 @@ def move_shared_objects_and_headers(container: Container):
     copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/algorithms/include")
     copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/data-structures/include")
 
-
+    # adjust permissions
+    container.exec_run(f"chown -R guest:guest /home/guest")
+    container.exec_run("find /home/guest -type f -exec chmod 644 {} +")
+    container.exec_run("find /home/guest -type d -exec chmod 755 {} +")
 
 class Session:
     def __init__(self, id: int, docker_client: DockerClient):
