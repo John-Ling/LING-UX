@@ -41,8 +41,6 @@ def move_shared_objects_and_headers(container: Container):
 
     # adjust permissions
     container.exec_run(f"chown -R guest:guest /home/guest")
-    container.exec_run("find /home/guest -type f -exec chmod 644 {} +")
-    container.exec_run("find /home/guest -type d -exec chmod 755 {} +")
 
 class Session:
     def __init__(self, id: int, docker_client: DockerClient):
