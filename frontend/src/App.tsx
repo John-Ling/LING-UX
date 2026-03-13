@@ -225,20 +225,17 @@ function App() {
     if (!terminalRef.current) return;
 
     terminal.open(terminalRef.current);
-    setTimeout(() => {
-      fitAddon.fit();
-      const socket = socketRef.current;
-      if (socket) {
-        console.log("Sizing window to initial client size")
-        console.log(terminal.rows, terminal.cols)
-        socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
-      }      
-    }, 0);
-
     xtermRef.current = terminal;
     fitAddonRef.current = fitAddon;
-
     splashScreen();
+
+    fitAddon.fit();
+    const socket = socketRef.current;
+    if (socket) {
+      console.log("Sizing window to initial client size")
+      console.log(terminal.rows, terminal.cols)
+      socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
+    }      
 
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;
