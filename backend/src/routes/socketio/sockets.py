@@ -33,7 +33,7 @@ def register_handlers(
         """
         session = get_session(sid)
         if session is None:
-            raise RuntimeError("No session exists")
+            return
 
         logger.info(f"Received command {data["command"]}")
         logger.info(f"Writing to container socket")
@@ -47,7 +47,8 @@ def register_handlers(
 
         session = get_session(sid)
         if session is None:
-            raise RuntimeError("No session exists")
+            return
+        
         resize_session(session, data["row_count"], data["column_count"])
 
     def get_session(sid: str):

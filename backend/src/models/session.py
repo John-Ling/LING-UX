@@ -74,7 +74,7 @@ class Session:
                 break
             time.sleep(0.1)
         else:
-            raise RuntimeError("Container failed to start")
+            self.close()            
 
         move_shared_objects_and_headers(self.container)
 
