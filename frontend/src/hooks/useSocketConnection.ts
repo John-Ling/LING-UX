@@ -8,6 +8,7 @@ export const useSocketConnection = (
 	onOpen: (self: Socket) => any,
 	onClose: (reason: Socket.DisconnectReason, description?: DisconnectDescription) => any,
 	onSessionCreated?: () => void,
+	onSessionError?: (message: string) => void,
 ) => {
 	const socketRef = useRef<Socket | null>(null);
 	const sessionIdRef = useRef<string | null>(null);
@@ -33,6 +34,8 @@ export const useSocketConnection = (
 			sessionIdRef.current = data.sid;
 			onSessionCreated?.();
 		});
+
+		socket.on("session_error", (data) => onSessionError?.(data.message));
 
 		// Handle IO from terminal
 		socket.on("terminal-receive", (data) => onReceive(data))

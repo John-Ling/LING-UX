@@ -55,7 +55,13 @@ function App() {
     sessionReadyRef.current = true;
   };
 
-  const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose, onSessionCreated);
+  const onSessionError = (message: string) => {
+    const terminal = xtermRef.current;
+    if (!terminal) return;
+    terminal.writeln(`\r\n\x1b[31mError: ${message}. Close this tab and open a new one.\x1b[0m`);
+  };
+
+  const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose, onSessionCreated, onSessionError);
   const { playOnce: beep } = useSound("beep");
   const { playOnce: hddClick } = useSound("hdd_click");
   const { playOnce: startupClick } = useSound("startup_click");
@@ -158,6 +164,7 @@ function App() {
       await sleep(100);
     }
     terminal.write("\r\x1b[2K"); // Clear
+    terminal.write("$ ");
 
     setSplashCompleted(true);
     terminal.focus();

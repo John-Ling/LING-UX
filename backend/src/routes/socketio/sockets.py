@@ -32,7 +32,7 @@ def register_handlers(
         """
         Receives data from a specific client and writes to the correct socket
         """
-        session = get_session(sid)
+        session = await get_session(sid)
         if session is None:
             return
 
@@ -46,17 +46,18 @@ def register_handlers(
     async def resize(sid: str, data: dict):
         logger.info("RESiZING")
 
-        session = get_session(sid)
+        session = await get_session(sid)
         if session is None:
             return
         
         resize_session(session, data["row_count"], data["column_count"])
 
-    def get_session(sid: str):
+    async def get_session(sid: str):
         session_set = sessions.get(sid, None)
 
         if session_set is None:
             logger.error(f"Session {sid} does not exist")
+            await sio.emit("session_error", {"message": "Session not found"}, to=sid)
             return None
 
         session = next(iter(session_set))
@@ -114,7 +115,7 @@ def register_handlers(
     async def disconnect(sid):
         loop = asyncio.get_running_loop()
         logger.info(f"Closing session {sid}")
-        session = get_session(sid)
+        session = await get_session(sid)
         if session:
             await loop.run_in_executor(executor=_executor, func=lambda: session.close())
             del sessions[sid]
