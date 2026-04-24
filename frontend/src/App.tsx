@@ -24,6 +24,7 @@ function App() {
   });
 
   const handleResizeRef = useRef<(() => void) | null>(null);
+  const sessionReadyRef = useRef<boolean>(false);
   const [splashCompleted, setSplashCompleted] = useState<boolean>(false);
   const [fontLoaded, setFontLoaded] = useState<boolean>(true);
   const [appStarted, setAppStarted] = useState<boolean>(false);
@@ -49,7 +50,12 @@ function App() {
     console.log("[LOG] Closing websocket. Goodbye :)");
   }
 
-  const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose);
+  const onSessionCreated = () => {
+    console.log("[LOG] Session ready");
+    sessionReadyRef.current = true;
+  };
+
+  const { socketRef } = useSocketConnection(data => socketReceiveRef.current(data), socketOpen, socketClose, onSessionCreated);
   const { playOnce: beep } = useSound("beep");
   const { playOnce: hddClick } = useSound("hdd_click");
   const { playOnce: startupClick } = useSound("startup_click");
@@ -143,9 +149,15 @@ function App() {
       "- Feel free to explore the folders with terminal commands.\n\r",
       "- Check the README for every project with command \"about\" to learn more about each one.\n\r",
       "- Expect more projects to appear here over time, probably written in Rust.\n\r",
-      "$ "
      ], 200
     );
+
+    // Wait for the backend session to finish initialising
+    terminal.write("Preparing session...");
+    while (!sessionReadyRef.current) {
+      await sleep(100);
+    }
+    terminal.write("\r\x1b[2K"); // Clear
 
     setSplashCompleted(true);
     terminal.focus();
@@ -235,7 +247,7 @@ function App() {
       console.log("Sizing window to initial client size")
       console.log(terminal.rows, terminal.cols)
       socket.emit("resize-terminal", { "row_count": terminal.rows, "column_count": terminal.cols });
-    }      
+    }
 
     terminal.onData(handleData);
     handleResizeRef.current = handleResize;

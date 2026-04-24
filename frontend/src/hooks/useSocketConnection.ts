@@ -7,6 +7,7 @@ export const useSocketConnection = (
 	onReceive: (data: any) => void,
 	onOpen: (self: Socket) => any,
 	onClose: (reason: Socket.DisconnectReason, description?: DisconnectDescription) => any,
+	onSessionCreated?: () => void,
 ) => {
 	const socketRef = useRef<Socket | null>(null);
 	const sessionIdRef = useRef<string | null>(null);
@@ -30,6 +31,7 @@ export const useSocketConnection = (
 			console.log("[LOG] session created successfully")
 			console.log(data)
 			sessionIdRef.current = data.sid;
+			onSessionCreated?.();
 		});
 
 		// Handle IO from terminal
