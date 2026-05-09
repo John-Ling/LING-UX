@@ -16,10 +16,17 @@ export const useSocketConnection = (
 	// Establish websocket connection
 	useEffect(() => {
 		console.log(`[LOG] connecting to session at ${import.meta.env.VITE_API_BASE_URL}`);
+		let socket;
+		if (import.meta.env.DEV) {
+			socket = io(import.meta.env.VITE_API_BASE_URL, {
+				path: "/api/socket.io"
+			});
+		} else {
+			socket = io(import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, ""), {
+				path: "/api/socket.io"
+			});
+		}
 
-		const socket = io(import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, ""), {
-			path: "/api/socket.io"
-		});
 		if (!socket) {
 			return;
 		}

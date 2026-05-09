@@ -10,6 +10,7 @@ from models.session import Session
 
 _executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="lingux-session")
 
+
 def register_handlers(
     sio: AsyncServer,
     sessions: defaultdict[str, set[Session]],
@@ -24,8 +25,7 @@ def register_handlers(
         sessions[sid].add(session)
         await sio.emit("session_created", sid, room=sid)
         logger.info("Starting read write loop")
-        sio.start_background_task(read_session, session) 
-
+        sio.start_background_task(read_session, session)
 
     @sio.on("send-to-terminal")
     async def receive(sid: str, data: dict):
@@ -49,7 +49,7 @@ def register_handlers(
         session = await get_session(sid)
         if session is None:
             return
-        
+
         resize_session(session, data["row_count"], data["column_count"])
 
     async def get_session(sid: str):
@@ -90,16 +90,17 @@ def register_handlers(
         while True:
             try:
                 output = await loop.run_in_executor(
-                    _executor,
-                    lambda: session.raw_socket.recv(READ_SIZE)
+                    _executor, lambda: session.raw_socket.recv(READ_SIZE)
                 )
-                
+
                 if not output:
                     logger.info(f"Session {session.id} socket closed")
                     break
 
                 decoded = output.decode(errors="ignore")
-                logger.info(f"Session {session.id} recv {len(output)} bytes: {repr(decoded[:50])}")
+                logger.info(
+                    f"Session {session.id} recv {len(output)} bytes: {repr(decoded[:50])}"
+                )
                 await sio.emit("terminal-receive", {"output": decoded}, to=session.id)
 
             except OSError as e:

@@ -65,7 +65,7 @@ function App() {
   const { playOnce: beep } = useSound("beep");
   const { playOnce: hddClick } = useSound("hdd_click");
   const { playOnce: startupClick } = useSound("startup_click");
-  const { playLoop: loopIdle} = useSound("idle");
+  const { playLoop: loopIdle } = useSound("idle");
 
   const splashScreen = async () => {
     const terminal = xtermRef.current;
@@ -88,7 +88,6 @@ function App() {
     await sleep(1000);
     beep();
     terminal.writeln("Starting system...");
-    hddClick();
     await sleep(500);
 
     await printLines([
@@ -149,19 +148,26 @@ function App() {
     ], 300);
 
     await printLines(
-     [
-      "John Ling's Linux web terminal created to showcase his various CLI projects (mostly data structure libraries).\n\r",
-      "\n\r",
-      "- Feel free to explore the folders with terminal commands.\n\r",
-      "- Check the README for every project with command \"about\" to learn more about each one.\n\r",
-      "- Expect more projects to appear here over time, probably written in Rust.\n\r",
-     ], 200
+      [
+        "John Ling's Linux web terminal created to showcase his various CLI projects (mostly data structure libraries).\n\r",
+        "\n\r",
+        "- Feel free to explore the folders with terminal commands.\n\r",
+        "- Check the README for every project with command \"about\" to learn more about each one.\n\r",
+        "- Expect more projects to appear here over time, probably written in Rust.\n\r",
+      ], 200
     );
 
     // Wait for the backend session to finish initialising
-    terminal.write("Preparing session...");
+    terminal.write("Preparing session");
+    let counter = 0;
     while (!sessionReadyRef.current) {
-      await sleep(100);
+      await sleep(500);
+      terminal.write(".");
+      counter += 1;
+      if (counter % 4 === 0) {
+        terminal.write("\r\x1b[2K");
+        terminal.write("Preparing session");
+      }
     }
     terminal.write("\r\x1b[2K"); // Clear
     terminal.write("$ ");
@@ -194,15 +200,15 @@ function App() {
 
   // Play ambient sound effects randomly
   useEffect(() => {
-   const intervalId = setInterval(() => {
-    if (Math.floor(Math.random() * 3) === 0)  {
-      hddClick();
-    }
-   }, 10000);
+    const intervalId = setInterval(() => {
+      if (Math.floor(Math.random() * 3) === 0) {
+        hddClick();
+      }
+    }, 10000);
 
-   return () => {
-    clearInterval(intervalId);
-   }
+    return () => {
+      clearInterval(intervalId);
+    }
   }, []);
 
   // Load font
@@ -216,7 +222,7 @@ function App() {
       document.fonts.clear();
       setFontLoaded(false);
     }
-  }, [])
+  }, []);
 
   // Initialise terminal
   useEffect(() => {
@@ -272,7 +278,6 @@ function App() {
     <div className="root">
       <div className="terminal-container">
         <div className="vignette" />
-        {/* <div className="terminal-overlay" /> */}
         {
           !appStarted
             ?

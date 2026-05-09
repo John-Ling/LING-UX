@@ -8,7 +8,9 @@ import tarfile
 import os
 
 # Disable for prod
-# load_dotenv("../../../env/.env.development")
+# import dotenv
+# dotenv.load_dotenv("../../../env/.env.development.local")
+
 
 def copy_to_container(container, src_pattern: str, dest_path: str):
     buf = io.BytesIO()
@@ -18,8 +20,10 @@ def copy_to_container(container, src_pattern: str, dest_path: str):
     buf.seek(0)
     container.put_archive(dest_path, buf)
 
+
 def ensure_dir_exists(container, path: str):
     container.exec_run(f"mkdir -p {path}")
+
 
 def move_shared_objects_and_headers(container: Container):
     base_path = os.environ.get("HOME_CONTENT_PATH", os.getcwd())
@@ -27,20 +31,45 @@ def move_shared_objects_and_headers(container: Container):
 
     # Create all destination directories first
     ensure_dir_exists(container, "/home/guest")
-    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/algorithms/lib")
-    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/algorithms/include")
-    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/data-structures/lib")
-    ensure_dir_exists(container, "/home/guest/data-structures-and-algorithms/data-structures/include")
+    ensure_dir_exists(
+        container, "/home/guest/data-structures-and-algorithms/algorithms/lib"
+    )
+    ensure_dir_exists(
+        container, "/home/guest/data-structures-and-algorithms/algorithms/include"
+    )
+    ensure_dir_exists(
+        container, "/home/guest/data-structures-and-algorithms/data-structures/lib"
+    )
+    ensure_dir_exists(
+        container, "/home/guest/data-structures-and-algorithms/data-structures/include"
+    )
 
     # Now copy
     copy_to_container(container, f"{base_path}/home-content/*", "/home/guest")
-    copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/algorithms/lib")
-    copy_to_container(container, f"{base_path}/shared/lib/*", "/home/guest/data-structures-and-algorithms/data-structures/lib")
-    copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/algorithms/include")
-    copy_to_container(container, f"{base_path}/shared/include/*", "/home/guest/data-structures-and-algorithms/data-structures/include")
+    copy_to_container(
+        container,
+        f"{base_path}/shared/lib/*",
+        "/home/guest/data-structures-and-algorithms/algorithms/lib",
+    )
+    copy_to_container(
+        container,
+        f"{base_path}/shared/lib/*",
+        "/home/guest/data-structures-and-algorithms/data-structures/lib",
+    )
+    copy_to_container(
+        container,
+        f"{base_path}/shared/include/*",
+        "/home/guest/data-structures-and-algorithms/algorithms/include",
+    )
+    copy_to_container(
+        container,
+        f"{base_path}/shared/include/*",
+        "/home/guest/data-structures-and-algorithms/data-structures/include",
+    )
 
     # adjust permissions
     container.exec_run(f"chown -R guest:guest /home/guest")
+
 
 class Session:
     def __init__(self, id: int, docker_client: DockerClient):
@@ -74,7 +103,7 @@ class Session:
                 break
             time.sleep(0.1)
         else:
-            self.close()            
+            self.close()
 
         move_shared_objects_and_headers(self.container)
 
@@ -90,4 +119,3 @@ class Session:
             self.container.kill()
         finally:
             self.container.remove()
-      
